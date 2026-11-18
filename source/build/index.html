@@ -391,6 +391,18 @@ body.home .tree{margin:0!important;height:calc(100vh - var(--top,52px));border-b
 .wxc details .chips{margin-top:6px}
 @media (max-width:520px){.wx{grid-template-columns:1fr}}
 
+
+svg .tinfo text{font:700 16px "IBM Plex Mono",ui-monospace,monospace;paint-order:normal;stroke:none}
+svg .tinfo .pr{fill:rgba(12,14,20,.92);stroke:#4a4f5c;stroke-width:1}
+svg .node.locked .tinfo{opacity:.75}
+.vcard .btxt .meta{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 2px}
+.vcard .btxt p{margin:4px 0 0;font-size:13px}
+.vcard .btxt p.how{color:var(--ink)}
+.vcard .btxt p.how b{color:var(--ok);font:600 11px var(--font-mono);text-transform:uppercase;letter-spacing:.06em;margin-right:4px}
+.vcard .bimg{height:190px;aspect-ratio:auto;flex:none;padding:8px;box-sizing:border-box}
+.vcard .bimg img{width:100%;height:100%;object-fit:contain;background:transparent}
+.vcard .btxt a.ext{font-size:12px}
+
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -1146,7 +1158,7 @@ const TPOS = {
  "Dreck":[145,155], "Core":[145,280], "Faith":[145,405], "Berunah":[145,522],
  "Crowd":[340,158], "Narcotic":[340,280], "Descent":[340,405], "Extort":[340,520], "Release":[340,637],
  "Infernis":[595,165], "Atlantica":[497,287], "Lecaro":[500,407], "Thalasso":[505,522], "Utril":[507,640], "Cubatres":[598,700],
- "Acidir":[690,287], "Polarus":[690,465], "Cosmocos":[690,640], "Glimmer":[795,688],
+ "Acidir":[690,287], "Polarus":[690,465], "Cosmocos":[690,640], "Glimmer":[790,714],
  "Asteroid-13":[895,160], "Junic":[895,287], "Roart":[795,322], "Chasm":[990,322], "Spine":[1078,368], "Etern":[895,415], "Dune":[988,457], "Glace":[895,530], "Calist":[900,648],
  "Hyx":[900,768], "Empra":[900,875],
  "Motra":[1203,172], "Fission-C":[1290,218], "Selector":[1376,262], "Dormant":[1466,306], "Xenphir":[1556,352],
@@ -1154,7 +1166,7 @@ const TPOS = {
  "Desolation":[1540,480], "Facto":[1110,700], "Gratar":[1196,835], "Alcatras":[1430,760], "Gloom":[1585,760], "Hyve":[1476,960],
  "ResearcherxB":[130,1050], "Carnate":[685,1000], "End":[900,1000]
 };
-const TLAB = {"Spine":"r","Selector":"r","Dormant":"r","Xenphir":"r","Dune":"r","Heap":"r","Glimmer":"r","Cubatres":"r","Centrus":"r","Duckstroid-14":"r","Fission-C":"r","Chasm":"r"};
+const TLAB = {"Spine":"r","Selector":"r","Dormant":"r","Xenphir":"r","Dune":"r","Heap":"r","Cubatres":"r","Centrus":"r","Duckstroid-14":"r","Fission-C":"r","Chasm":"r"};
 const TEDGES = [
  ["Galetry","Dreck"],["Galetry","Crowd"],["Galetry","Infernis"],["Galetry","Asteroid-13"],["Galetry","Motra"],
  ["Dreck","Core"],["Core","Faith"],["Faith","Berunah"],
@@ -1175,7 +1187,7 @@ const BRANCH = {"Galetry":"#8fd16a","Dreck":"#e9dfe3","Core":"#b9a7c9","Faith":"
  "Motra":"#d8f0e0","Fission-C":"#f0c060","Selector":"#d6e6f0","Dormant":"#c9e07a","Xenphir":"#c0c8d8","Oldred":"#e0d0a8","Duckstroid-14":"#f5c518","Trite":"#d0c0a0","Heap":"#c0b090","Vindict":"#f0e8e8",
  "Filitrios":"#8fe0b0","Centrus":"#d0e0c0","Demetrica":"#e0605a","Hyx":"#e0804a","Empra":"#f0d070","Desolation":"#d0605a","Gratar":"#8aa0e0","Alcatras":"#b0b8f0","Gloom":"#80b0a0","Hyve":"#f0c060",
  "Repress":"#aab3c8","End":"#aab3c8","ResearcherxB":"#e8e8e8","Carnate":"#e0a080","Facto":"#c0b0a0","MorvDonalds":"#f0c040"};
-let tv = null, tsel = null, tAll = false;
+let tv = null, tsel = null, tAll = false, tInfo = localStorage.getItem("wm-tinfo") === "1";
 const TV0 = () => (document.body.classList.contains("home") && innerWidth > 1000) ? [-215, -80, 2160, 1260] : [-60, -40, 2120, 1220];
 function tIcon(n){ if (n === "End") n = "Repress"; return (window.ICONS && ICONS[n]) || iconFor(n) || ""; }
 function tStatus(n){ return isV(n) ? "vis" : isU(n) ? "unl" : available(n) ? "reach" : "locked"; }
@@ -1185,6 +1197,17 @@ function tPath(a, b){
   const sx = x1 + dx / d * r, sy = y1 + dy / d * r, ex = x2 - dx / d * (r + 6), ey = y2 - dy / d * (r + 6);
   const bend = Math.min(60, d * .18), nx = -dy / d * bend, ny = dx / d * bend;
   return `M${sx.toFixed(1)},${sy.toFixed(1)} Q${((sx + ex) / 2 + nx).toFixed(1)},${((sy + ey) / 2 + ny).toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}`;
+}
+const HZFILL = {h0:"#3f8f5a", h1:"#7d9a2f", h2:"#b8860b", h3:"#cf6a17", h4:"#c0392b", h5:"#8e1f4b", h6:"#5b3fa0"};
+function tInfoBadge(n, x, y, R, lab){
+  const m = M[n]; if (!m || n === "End") return "";
+  const hz = ({"B.. for Bees":"B", "I see you":"??", "Quack":"Qk"})[m.hazard] || m.hazard || "?";
+  const pr = m.price ? "▮" + m.price : "Free";
+  const cw = 9.4, h = 22;
+  const w1 = Math.max(hz.length * cw + 10, 26), w2 = pr.length * cw + 12;
+  const hx = x - R - w1 + 6, hy = y - h / 2, px = x - w2 / 2, py = y + R + 5;
+  return `<g class="tinfo" aria-hidden="true"><rect x="${hx}" y="${hy}" width="${w1}" height="${h}" rx="5" fill="${HZFILL[hzClass(m.hazard)]}" stroke="#07080c" stroke-width="2"/><text x="${hx + w1 / 2}" y="${hy + 16}" text-anchor="middle" fill="#fff">${esc(hz)}</text>
+    <rect class="pr" x="${px}" y="${py}" width="${w2}" height="${h}" rx="5"/><text x="${x}" y="${py + 16}" text-anchor="middle" fill="${m.price ? "#f3c27a" : "#5cc28a"}">${esc(pr)}</text></g>`;
 }
 function treeSvg(){
   const stars = []; let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -1216,6 +1239,7 @@ function treeSvg(){
       ${ic ? `<image href="${esc(ic)}" x="${x - I / 2}" y="${y - I / 2}" width="${I}" height="${I}" preserveAspectRatio="xMidYMid meet" style="image-rendering:pixelated"/>` : `<text x="${x}" y="${y + 7}" text-anchor="middle" fill="#cfcabd" style="font-size:20px">${esc(n[0])}</text>`}
       <circle class="ring" cx="${x}" cy="${y}" r="${R + 1}"/>
       <text x="${tx}" y="${ty}" text-anchor="${anchor}" fill="${col}" style="${big ? "font-size:30px" : ""}">${esc(n === "End" ? "Repress / End" : n)}</text>
+      ${tInfo ? tInfoBadge(n, x, y, R, lab) : ""}
     </g>`;
   }).join("");
   const ah = (id, c) => `<marker id="ah-${id}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`;
@@ -1303,6 +1327,7 @@ function wirePanZoom(svg){
   $("#tzin").onclick = () => zoom(1 / 1.3); $("#tzout").onclick = () => zoom(1.3);
   $("#tzreset").onclick = () => { tv = TV0(); apply(); };
   $("#tall").onchange = e => { tAll = e.target.checked; renderTree(); };
+  $("#tinfo").onchange = e => { tInfo = e.target.checked; localStorage.setItem("wm-tinfo", tInfo ? "1" : "0"); renderTree(); };
   const fb = $("#tfull"), tree = $("#tree");
   fb.textContent = document.fullscreenElement ? "Exit full screen" : "⛶ Full screen";
   fb.onclick = () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (tree.requestFullscreen) tree.requestFullscreen().catch(() => { fb.textContent = "Full screen not available"; }); };
@@ -1319,7 +1344,7 @@ function renderHome(){
   $("#v-home").innerHTML = `
   <div class="tree" id="tree">
     <div class="tree-stage">
-      <div class="tree-tools"><button id="tzin" aria-label="Zoom in">+ Zoom</button><button id="tzout" aria-label="Zoom out">−</button><button id="tzreset">Fit</button><button id="tfull">⛶ Full screen</button><label><input type="checkbox" id="tall" ${tAll ? "checked" : ""}> Show all alternate routes</label><a class="tsum" href="#progress" title="Open the progress page">${uN}/${wes.length} unlocked · ${vN} visited · ${avail.length} reachable →</a></div>
+      <div class="tree-tools"><button id="tzin" aria-label="Zoom in">+ Zoom</button><button id="tzout" aria-label="Zoom out">−</button><button id="tzreset">Fit</button><button id="tfull">⛶ Full screen</button><label><input type="checkbox" id="tall" ${tAll ? "checked" : ""}> Show all alternate routes</label><label title="Show each moon's route price and hazard level"><input type="checkbox" id="tinfo" ${tInfo ? "checked" : ""}> Price &amp; hazard</label><a class="tsum" href="#progress" title="Open the progress page">${uN}/${wes.length} unlocked · ${vN} visited · ${avail.length} reachable →</a></div>
       <div class="tree-legend"><span><i style="border-color:#f0a23a"></i>Visited</span><span><i style="border-color:#5cc28a"></i>Unlocked</span><span><i style="border-color:#f0a23a;border-style:dashed"></i>Reachable now</span><span><i style="border-color:#3a3f4a"></i>Locked</span><span>Click: details · Right-click or double-click: open guide · Drag / scroll: pan &amp; zoom</span></div>
       <div class="tree-credit">Layout after the community progression map by WhiteA12 (inspired by Nagatonis)</div>
     </div>
@@ -1414,6 +1439,13 @@ function renderMoons(){
 }
 
 /* ---------- list pages ---------- */
+let entFilter = localStorage.getItem("wm-ents") || "wes";
+function vanillaCards(){
+  return (window.VENTS || []).map(e => `<div class="bcard vcard"><div class="bimg">${e.img ? `<img src="${esc(e.img)}" alt="${esc(e.n)}" loading="lazy">` : ""}</div><div class="btxt"><b>${esc(e.n)}</b>
+    <div class="meta"><span class="chip mono">${esc(e.g)}</span><span class="chip mono" title="Health (1 = one shovel hit)">${esc(e.hp)} HP</span><span class="chip mono">${e.stun ? "Stunnable" : "Not stunnable"}</span></div>
+    <small>${esc(e.d)}</small>${e.s ? `<p class="how"><b>Handle it</b>${esc(e.s)}</p>` : ""}
+    <p><a class="ext" href="${esc(e.link)}" target="_blank" rel="noopener">Lethal Company wiki ↗</a></p></div></div>`).join("");
+}
 function renderList(kind){
   const k = {interiors:"interior", entities:"entity", guides:"guide"}[kind];
   const titles = {interiors:"Interiors", entities:"Entities (Wesley's Enemy Variants & mod creatures)", guides:"Guides & item lists"}[kind];
@@ -1425,6 +1457,17 @@ function renderList(kind){
     if (!big) return `<a class="card" href="#${s}">${im ? `<img src="${esc(im)}" alt="" loading="lazy">` : `<img alt="">`}<span><b>${esc(t)}</b><small>${esc((PLAIN[s] || "").slice(0, 90))}…</small></span></a>`;
     return `<a class="bcard" href="#${s}"><div class="bimg">${im ? `<img src="${esc(im)}" alt="${esc(t)}" loading="lazy">` : ""}${ic && ic !== im ? `<img class="bico" src="${esc(ic)}" alt="">` : ""}</div><div class="btxt"><b>${esc(t)}</b><small>${esc((PLAIN[s] || "").slice(0, 140))}…</small></div></a>`;
   }).join("");
+  if (k === "entity"){
+    const seg = (v, l) => `<button aria-pressed="${entFilter === v}" data-ef="${v}">${l}</button>`;
+    const vc = vanillaCards(), nW = NAV[k].length, nV = (window.VENTS || []).length;
+    const body = entFilter === "wes" ? cards : entFilter === "van" ? vc
+      : `<h2 style="font-size:18px;margin:4px 0 8px">Wesley's Moons</h2><div class="bcards">${cards}</div><h2 style="font-size:18px;margin:16px 0 8px">Vanilla Lethal Company</h2><div class="bcards">${vc}</div>`;
+    $("#v-list").innerHTML = `<div class="filters"><h1 style="font-size:24px;margin-right:8px">Entities</h1><div class="seg" role="group" aria-label="Which entities">${seg("wes", `Wesley's (${nW})`)}${seg("van", `Vanilla (${nV})`)}${seg("all", "All")}</div></div>
+      <p style="color:var(--muted);margin:4px 0 12px">${entFilter === "van" ? "The base-game creatures, from the Lethal Company Wiki. They still spawn on Wesley's moons." : entFilter === "wes" ? "Creatures and enemy variants added by Wesley's Moons." : "Wesley's creatures first, then the base game's."}</p>
+      ${entFilter === "all" ? body : `<div class="bcards">${body}</div>`}`;
+    $$("#v-list [data-ef]").forEach(b => b.onclick = () => { entFilter = b.dataset.ef; localStorage.setItem("wm-ents", entFilter); renderList(kind); });
+    return;
+  }
   $("#v-list").innerHTML = `<h1 style="font-size:24px">${esc(titles)}</h1><p style="color:var(--muted);margin:4px 0 14px">${esc(intro)}</p><div class="${big ? "bcards" : "cards"}">${cards}</div>`;
 }
 
@@ -1639,7 +1682,7 @@ function wireSearch(){
   try { if (localStorage.getItem("wm-spoil") === "1") document.body.classList.add("hide-spoilers"); } catch(e){}
   try {
     const [pj, mj] = await Promise.all([fetch("data/pages.json").then(r => r.json()), fetch("data/moons.json").then(r => r.json())]);
-    P = pj.pages; PLAIN = pj.plain; NAV = pj.nav; M = mj.moons; MAPS = mj.maps; window.ICONS = mj.icons || {}; window.INTICONS = mj.intIcons || {}; window.ITEMS = mj.items || {};
+    P = pj.pages; PLAIN = pj.plain; NAV = pj.nav; M = mj.moons; MAPS = mj.maps; window.ICONS = mj.icons || {}; window.INTICONS = mj.intIcons || {}; window.ITEMS = mj.items || {}; window.VENTS = mj.vents || [];
   } catch(e){
     $("#loading").textContent = "The guide's data didn't load. Reload the page to try again."; return;
   }
