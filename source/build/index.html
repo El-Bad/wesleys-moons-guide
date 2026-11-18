@@ -393,6 +393,7 @@ body.home .tree{margin:0!important;height:calc(100vh - var(--top,52px));border-b
 
 
 svg .tinfo text{font:700 16px "IBM Plex Mono",ui-monospace,monospace;paint-order:normal;stroke:none}
+svg .tinfo text.prt{font-size:12.5px}
 svg .tinfo .pr{fill:rgba(12,14,20,.92);stroke:#4a4f5c;stroke-width:1}
 svg .node.locked .tinfo{opacity:.75}
 .vcard .btxt .meta{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 2px}
@@ -402,6 +403,19 @@ svg .node.locked .tinfo{opacity:.75}
 .vcard .bimg{height:190px;aspect-ratio:auto;flex:none;padding:8px;box-sizing:border-box}
 .vcard .bimg img{width:100%;height:100%;object-fit:contain;background:transparent}
 .vcard .btxt a.ext{font-size:12px}
+
+
+.vint{display:grid;grid-template-columns:minmax(260px,380px) 1fr;gap:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;scroll-margin-top:calc(var(--top) + 10px)}
+.vint>img{width:100%;height:100%;min-height:220px;object-fit:cover;display:block;cursor:zoom-in}
+.vint .vbody{padding:10px 14px}
+.vint h2{margin:0;font-size:20px}
+.vint .aka{font:600 11px var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.vint p{margin:6px 0;font-size:14px}
+.vint .gh{margin-top:8px}
+.vint .gh h3{font:600 12px var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin:0 0 4px}
+.vint .moonsline{font-size:13px;color:var(--muted)}
+.vint.flash{outline:2px solid var(--accent)}
+@media (max-width:760px){.vint{grid-template-columns:1fr}.vint>img{min-height:0;aspect-ratio:16/9}}
 
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -962,7 +976,7 @@ function bigPreview(slug){
 }
 function titleSlug(t){ for (const k of ["interior","moon","entity","guide"]) { const f = (NAV[k] || []).find(x => x[0] === t); if (f) return f[1]; } return null; }
 function intTiles(list){
-  return `<div class="ints">${(list || []).map(([n, p]) => { const sl = titleSlug(n); const ic = window.INTICONS && INTICONS[n]; const inner = `${ic ? `<img src="${esc(ic)}" alt="">` : `<span class="ph">${esc(n[0])}</span>`}<span><b>${esc(n)}</b><small>${p}%</small></span>`; return sl ? `<a class="int" href="#${sl}" title="Open the ${esc(n)} guide">${inner}</a>` : `<span class="int">${inner}</span>`; }).join("")}</div>`;
+  return `<div class="ints">${(list || []).map(([n, p]) => { const sl = titleSlug(n); const ic = (window.INTICONS && INTICONS[n]) || (vintIdFor(n) && (window.VINTIMGS || {})[vintIdFor(n)]); const inner = `${ic ? `<img src="${esc(ic)}" alt="">` : `<span class="ph">${esc(n[0])}</span>`}<span><b>${esc(n)}</b><small>${p}%</small></span>`; const vi = !sl && vintIdFor(n); return sl ? `<a class="int" href="#${sl}" title="Open the ${esc(n)} guide">${inner}</a>` : vi ? `<a class="int" href="#vint-${vi}" title="Open the ${esc(n)} guide">${inner}</a>` : `<span class="int">${inner}</span>`; }).join("")}</div>`;
 }
 function moonLink(n){ const m = M[n]; return m?.slug ? `#${m.slug}` : (m?.wiki || "#moons"); }
 function moonChip(n){
@@ -985,14 +999,16 @@ function route(){
   else if (h === "progress"){ $("#v-progress").classList.add("on"); renderProgress(); }
   else if (h === "moons"){ $("#v-moons").classList.add("on"); renderMoons(); }
   else if (h === "interiors" || h === "entities" || h === "guides"){ $("#v-list").classList.add("on"); renderList(h); }
+  else if (h.startsWith("vint-")){ $("#v-list").classList.add("on"); if (intFilter === "wes") intFilter = "van"; renderList("interiors"); tab = "interiors";
+    requestAnimationFrame(() => { const el = document.getElementById(h); if (el){ window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - (($(".top").offsetHeight || 60) + 10)); el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1500); } }); return finishRoute(tab); }
   else if (h === "item-uses"){ $("#v-items").classList.add("on"); renderItems(); }
   else if (h === "weather"){ $("#v-weather").classList.add("on"); renderWeather(); }
   else if (h === "field-notes"){ $("#v-notes").classList.add("on"); renderNotes(); }
   else if (P && P[h]){ $("#v-page").classList.add("on"); renderPage(h); tab = {moon:"moons",interior:"interiors",entity:"entities",guide:"guides"}[P[h].kind]; }
   else { document.body.classList.add("home"); $("#v-home").classList.add("on"); renderHome(); tab = "home"; }
-  const a = $(`nav.tabs a[data-tab="${tab}"]`); if (a) a.setAttribute("aria-current","page");
-  window.scrollTo(0,0);
+  finishRoute(tab); window.scrollTo(0,0);
 }
+function finishRoute(tab){ const a = $(`nav.tabs a[data-tab="${tab}"]`); if (a) a.setAttribute("aria-current","page"); }
 function renderAll(scroll){
   const h = location.hash.slice(1) || "home";
   const y = window.scrollY;
@@ -1187,7 +1203,7 @@ const BRANCH = {"Galetry":"#8fd16a","Dreck":"#e9dfe3","Core":"#b9a7c9","Faith":"
  "Motra":"#d8f0e0","Fission-C":"#f0c060","Selector":"#d6e6f0","Dormant":"#c9e07a","Xenphir":"#c0c8d8","Oldred":"#e0d0a8","Duckstroid-14":"#f5c518","Trite":"#d0c0a0","Heap":"#c0b090","Vindict":"#f0e8e8",
  "Filitrios":"#8fe0b0","Centrus":"#d0e0c0","Demetrica":"#e0605a","Hyx":"#e0804a","Empra":"#f0d070","Desolation":"#d0605a","Gratar":"#8aa0e0","Alcatras":"#b0b8f0","Gloom":"#80b0a0","Hyve":"#f0c060",
  "Repress":"#aab3c8","End":"#aab3c8","ResearcherxB":"#e8e8e8","Carnate":"#e0a080","Facto":"#c0b0a0","MorvDonalds":"#f0c040"};
-let tv = null, tsel = null, tAll = false, tInfo = localStorage.getItem("wm-tinfo") === "1";
+let tv = null, tsel = null, tAll = false, tInfo = localStorage.getItem("wm-tinfo") !== "0";
 const TV0 = () => (document.body.classList.contains("home") && innerWidth > 1000) ? [-215, -80, 2160, 1260] : [-60, -40, 2120, 1220];
 function tIcon(n){ if (n === "End") n = "Repress"; return (window.ICONS && ICONS[n]) || iconFor(n) || ""; }
 function tStatus(n){ return isV(n) ? "vis" : isU(n) ? "unl" : available(n) ? "reach" : "locked"; }
@@ -1203,11 +1219,11 @@ function tInfoBadge(n, x, y, R, lab){
   const m = M[n]; if (!m || n === "End") return "";
   const hz = ({"B.. for Bees":"B", "I see you":"??", "Quack":"Qk"})[m.hazard] || m.hazard || "?";
   const pr = m.price ? "▮" + m.price : "Free";
-  const cw = 9.4, h = 22;
-  const w1 = Math.max(hz.length * cw + 10, 26), w2 = pr.length * cw + 12;
-  const hx = x - R - w1 + 6, hy = y - h / 2, px = x - w2 / 2, py = y + R + 5;
+  const h = 22, h2 = 17;
+  const w1 = Math.max(hz.length * 9.4 + 10, 26), w2 = pr.length * 7.4 + 9;
+  const hx = x - R - w1 + 6, hy = y - h / 2, px = x - w2 / 2, py = y + R - 4;
   return `<g class="tinfo" aria-hidden="true"><rect x="${hx}" y="${hy}" width="${w1}" height="${h}" rx="5" fill="${HZFILL[hzClass(m.hazard)]}" stroke="#07080c" stroke-width="2"/><text x="${hx + w1 / 2}" y="${hy + 16}" text-anchor="middle" fill="#fff">${esc(hz)}</text>
-    <rect class="pr" x="${px}" y="${py}" width="${w2}" height="${h}" rx="5"/><text x="${x}" y="${py + 16}" text-anchor="middle" fill="${m.price ? "#f3c27a" : "#5cc28a"}">${esc(pr)}</text></g>`;
+    <rect class="pr" x="${px}" y="${py}" width="${w2}" height="${h2}" rx="4"/><text class="prt" x="${x}" y="${py + 12.5}" text-anchor="middle" fill="${m.price ? "#f3c27a" : "#5cc28a"}">${esc(pr)}</text></g>`;
 }
 function treeSvg(){
   const stars = []; let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -1388,9 +1404,9 @@ function renderProgress(){
 }
 
 /* ---------- moon list ---------- */
-let mf = {show:"all", vanilla:false, sort:"route", dir:1};
+let mf = {show:"all", src:localStorage.getItem("wm-msrc") || "wes", sort:"route", dir:1};
 function renderMoons(){
-  let list = Object.values(M).filter(m => mf.vanilla || !m.vanilla);
+  let list = Object.values(M).filter(m => mf.src === "all" ? true : mf.src === "van" ? m.vanilla : !m.vanilla);
   if (mf.show === "unlocked") list = list.filter(m => isU(m.name));
   if (mf.show === "available") list = list.filter(m => available(m.name));
   if (mf.show === "locked") list = list.filter(m => !isU(m.name));
@@ -1425,20 +1441,60 @@ function renderMoons(){
     <div class="filters">
       <h1 style="font-size:24px;margin-right:12px">Moons</h1>
       <div class="seg" role="group" aria-label="Filter moons">${seg("all","All")}${seg("unlocked","Unlocked")}${seg("available","Reachable")}${seg("locked","Locked")}</div>
-      <label><input type="checkbox" id="vanilla" ${mf.vanilla ? "checked" : ""}> Include vanilla moons</label>
+      <div class="seg" role="group" aria-label="Which moons">${[["wes","Wesley's"],["van","Vanilla"],["all","All"]].map(([k, l]) => `<button aria-pressed="${mf.src === k}" data-src="${k}">${l}</button>`).join("")}</div>
       <span style="margin-left:auto;font-size:12px;color:var(--muted)">Default order: easiest hazard first, then cheapest. Click a column to sort.</span>
     </div>
     <div class="tablewrap"><table class="moons">
       <thead><tr>${th("status","Status")}${th("name","Moon")}${th("num","#")}${th("price","Cost")}${th("hazard","Hazard")}${th("scrap","Scrap")}${th("est","Est. loot")}${th("inpow","Power in/out")}<th scope="col">Main interior</th><th scope="col">How to reach (unlocked from)</th></tr></thead>
       <tbody>${rows}</tbody></table></div>`;
   $$("#v-moons [data-show]").forEach(b => b.onclick = () => { mf.show = b.dataset.show; renderMoons(); });
-  $("#vanilla").onchange = e => { mf.vanilla = e.target.checked; renderMoons(); };
+  $$("#v-moons [data-src]").forEach(b => b.onclick = () => { mf.src = b.dataset.src; localStorage.setItem("wm-msrc", mf.src); renderMoons(); });
   $$("#v-moons th[data-sort]").forEach(t => t.onclick = () => { const k = t.dataset.sort; if (mf.sort === k) mf.dir *= -1; else { mf.sort = k; mf.dir = (k === "est" || k === "status") ? -1 : 1; } renderMoons(); });
   $$("#v-moons [data-u]").forEach(b => b.onclick = () => setU(b.dataset.u, !isU(b.dataset.u)));
   $$("#v-moons [data-v]").forEach(b => b.onclick = () => setV(b.dataset.v, !isV(b.dataset.v)));
 }
 
 /* ---------- list pages ---------- */
+
+/* ---------- vanilla interiors ---------- */
+const VINT = [
+ {id:"facility", n:"Facility", aka:"Factory · vanilla", names:["Facility","Factory"], link:"https://lethal.miraheze.org/wiki/Factory",
+  d:"The most common vanilla interior: maze-like concrete hallways, storage and server rooms, and catwalks over deep pits across two floors. The apparatus sits in a room with a big power machine.",
+  g:["Use the ship terminal: type a security door's code (shown on the radar map) to open it, or a turret's/mine's code to switch it off for a few seconds. Keep one person on the terminal if you can.",
+     "Turning off the breaker box cuts the lights but opens every security door for good.",
+     "Fire exits only open onto catwalks or the small loot rooms. Note where they are; they're often a quicker way out.",
+     "Catwalks: walk, don't sprint, near the broken gap; jump the bent beam carefully with heavy scrap.",
+     "The apparatus is worth ~80 (and needed for Repress repairs). Pulling it kills the power, so grab the rest of your loot first and expect enemies to get busier."],
+  h:["Turrets in hallways: disable them from the terminal or stay out of their sweep.", "Landmines: step off and away quickly, or disable from the terminal.", "Long pits under catwalks: falling is instant death.", "Thumpers and Coil-Heads love the long hallways; keep corners between you and them."]},
+ {id:"mansion", n:"Mansion", aka:"Manor · vanilla", names:["Mansion","Manor"], link:"https://lethal.miraheze.org/wiki/Mansion",
+  d:"Carpeted hallways and household rooms on two floors: a big foyer with a balcony, library, kitchen, bedrooms, bathroom, garage, party room and a pool. Mostly on Rend and Dine in vanilla; on Wesley's moons it shows up on about a dozen moons.",
+  g:["Scrap hides in closets under stairs, cupboards, bathroom drawers, alcoves and sometimes in the pool. Check them all.",
+     "No security doors here; locked doors need a key or lockpicker.",
+     "Fire exits always open into a bookshelf room, sometimes hidden behind a shelf (look for the red glow).",
+     "To escape enemies, jump onto the foyer bookshelves, big tables or kitchen counters, then hop between them.",
+     "Rooms are big and look alike: drop a marker or stick to one wing at a time and keep the foyer as your reference point."],
+  h:["Butlers are common: they only attack when you're alone, so stay in pairs. A kitchen knife kills one in a hit; killing it releases Mask Hornets.", "Brackens and Ghost Girls use the many rooms and stairs to sneak up; check behind you.", "The pool's deep end can drown you: don't jump in with heavy loot.", "Wide open foyers mean ranged enemies (Nutcrackers) see you from far away."]},
+ {id:"mineshaft", n:"Mineshaft", aka:"vanilla", names:["Mineshaft"], link:"https://lethal.miraheze.org/wiki/Mineshaft",
+  d:"An elevator from the entrance takes you down to facility tunnels and a deep cave system. The caves, behind doorways with a blue light above them, hold most of the scrap.",
+  g:["Head straight for the blue-lit doorways: that's where most scrap is.", "Caves are dark and branchy. Bring flashlights and mark your way back.",
+     "The elevator is slow and the only way back from the main area except fire exits. Fire exits open straight into the hallways and skip the elevator, so find one early.",
+     "Ride the elevator in groups and check it's empty before calling it."],
+  h:["Getting stuck on the elevator with an enemy is a common death: don't call it if something is chasing you.", "Cave drops and narrow ledges: walk, don't sprint.", "Enemies come from the dark side passages; keep your back to a wall when looting."]}
+];
+let intFilter = localStorage.getItem("wm-ints") || "wes";
+function vintIdFor(n){ const v = VINT.find(x => x.names.includes(n)); return v ? v.id : null; }
+function vintCards(){
+  const VI = window.VINTIMGS || {};
+  return VINT.map(v => {
+    const moons = Object.entries(M).filter(([n, m]) => !m.vanilla).filter(([n, m]) => { let L = m.interiors; if (typeof L === "string"){ try { L = JSON.parse(L.replace(/'/g, '"')); } catch(e){ L = []; } } return (L || []).some(([x]) => v.names.includes(x)); }).map(([n]) => n).sort();
+    return `<article class="vint" id="vint-${v.id}">${VI[v.id] ? `<img src="${esc(VI[v.id])}" alt="${esc(v.n)} entrance" data-lb>` : "<div></div>"}<div class="vbody">
+      <h2>${esc(v.n)}</h2><div class="aka">${esc(v.aka)}</div><p>${esc(v.d)}</p>
+      ${moons.length ? `<p class="moonsline">Can be the interior on: ${moons.map(moonChip).join(" ")}</p>` : ""}
+      <div class="gh"><div class="callout"><h3>Guide</h3><ul>${v.g.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div><div class="hazbox"><h3>Hazards</h3><ul>${v.h.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div></div>
+      <p><a href="${esc(v.link)}" target="_blank" rel="noopener">Lethal Company wiki ↗</a></p></div></article>`;
+  }).join("");
+}
+
 let entFilter = localStorage.getItem("wm-ents") || "wes";
 function vanillaCards(){
   return (window.VENTS || []).map(e => `<div class="bcard vcard"><div class="bimg">${e.img ? `<img src="${esc(e.img)}" alt="${esc(e.n)}" loading="lazy">` : ""}</div><div class="btxt"><b>${esc(e.n)}</b>
@@ -1457,6 +1513,16 @@ function renderList(kind){
     if (!big) return `<a class="card" href="#${s}">${im ? `<img src="${esc(im)}" alt="" loading="lazy">` : `<img alt="">`}<span><b>${esc(t)}</b><small>${esc((PLAIN[s] || "").slice(0, 90))}…</small></span></a>`;
     return `<a class="bcard" href="#${s}"><div class="bimg">${im ? `<img src="${esc(im)}" alt="${esc(t)}" loading="lazy">` : ""}${ic && ic !== im ? `<img class="bico" src="${esc(ic)}" alt="">` : ""}</div><div class="btxt"><b>${esc(t)}</b><small>${esc((PLAIN[s] || "").slice(0, 140))}…</small></div></a>`;
   }).join("");
+  if (k === "interior"){
+    const seg = (v, l) => `<button aria-pressed="${intFilter === v}" data-if="${v}">${l}</button>`;
+    const wes = `<div class="bcards">${cards}</div>`, van = vintCards();
+    $("#v-list").innerHTML = `<div class="filters"><h1 style="font-size:24px;margin-right:8px">Interiors</h1><div class="seg" role="group" aria-label="Which interiors">${seg("wes", `Wesley's (${NAV[k].length})`)}${seg("van", `Vanilla (${VINT.length})`)}${seg("all", "All")}</div></div>
+      <p style="color:var(--muted);margin:4px 0 12px">${intFilter === "van" ? "The base game's buildings. Many Wesley's moons can still roll them." : intFilter === "wes" ? "Building layouts added by the mod, with their hazards, puzzles and rewards." : "Wesley's interiors first, then the base game's."}</p>
+      ${intFilter === "wes" ? wes : intFilter === "van" ? van : `${wes}<h2 style="font-size:18px;margin:16px 0 8px">Vanilla Lethal Company</h2>${van}`}`;
+    $$("#v-list [data-if]").forEach(b => b.onclick = () => { intFilter = b.dataset.if; localStorage.setItem("wm-ints", intFilter); renderList(kind); });
+    $$("#v-list .vint img[data-lb]").forEach(i => i.onclick = () => openLb(i.currentSrc || i.src, i.alt));
+    return;
+  }
   if (k === "entity"){
     const seg = (v, l) => `<button aria-pressed="${entFilter === v}" data-ef="${v}">${l}</button>`;
     const vc = vanillaCards(), nW = NAV[k].length, nV = (window.VENTS || []).length;
@@ -1682,7 +1748,7 @@ function wireSearch(){
   try { if (localStorage.getItem("wm-spoil") === "1") document.body.classList.add("hide-spoilers"); } catch(e){}
   try {
     const [pj, mj] = await Promise.all([fetch("data/pages.json").then(r => r.json()), fetch("data/moons.json").then(r => r.json())]);
-    P = pj.pages; PLAIN = pj.plain; NAV = pj.nav; M = mj.moons; MAPS = mj.maps; window.ICONS = mj.icons || {}; window.INTICONS = mj.intIcons || {}; window.ITEMS = mj.items || {}; window.VENTS = mj.vents || [];
+    P = pj.pages; PLAIN = pj.plain; NAV = pj.nav; M = mj.moons; MAPS = mj.maps; window.ICONS = mj.icons || {}; window.INTICONS = mj.intIcons || {}; window.ITEMS = mj.items || {}; window.VENTS = mj.vents || []; window.VINTIMGS = mj.vintImgs || {};
   } catch(e){
     $("#loading").textContent = "The guide's data didn't load. Reload the page to try again."; return;
   }
