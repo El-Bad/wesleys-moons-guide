@@ -394,6 +394,7 @@ body.home .tree{margin:0!important;height:calc(100vh - var(--top,52px));border-b
 
 svg .tinfo text{font:700 16px "IBM Plex Mono",ui-monospace,monospace;paint-order:normal;stroke:none}
 svg .tinfo text.prt{font-size:12.5px}
+svg .tinfo text.hzt{font-size:13.5px}
 svg .tinfo .pr{fill:rgba(12,14,20,.92);stroke:#4a4f5c;stroke-width:1}
 svg .node.locked .tinfo{opacity:.75}
 .vcard .btxt .meta{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 2px}
@@ -417,6 +418,7 @@ svg .node.locked .tinfo{opacity:.75}
 .vint.flash{outline:2px solid var(--accent)}
 @media (max-width:760px){.vint{grid-template-columns:1fr}.vint>img{min-height:0;aspect-ratio:16/9}}
 
+.cr{display:inline-block;font-size:.62em;transform:scaleX(.8);margin-right:1px;vertical-align:.12em;opacity:.9}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -883,6 +885,7 @@ const GOALS = [
 ];
 
 /* ---------- hazard ranking ---------- */
+const CR = '<span class="cr" aria-label="credits">▮</span>';
 const HZ = ["Safe","F","D-","D","C","B.. for Bees","B","B+","B++","A","A+","S","S+","S++","S++++","Quack","???","I see you"];
 function hzRank(h){ const i = HZ.indexOf(h); return i < 0 ? 12 : i; }
 function hzClass(h){
@@ -1203,7 +1206,7 @@ const BRANCH = {"Galetry":"#8fd16a","Dreck":"#e9dfe3","Core":"#b9a7c9","Faith":"
  "Motra":"#d8f0e0","Fission-C":"#f0c060","Selector":"#d6e6f0","Dormant":"#c9e07a","Xenphir":"#c0c8d8","Oldred":"#e0d0a8","Duckstroid-14":"#f5c518","Trite":"#d0c0a0","Heap":"#c0b090","Vindict":"#f0e8e8",
  "Filitrios":"#8fe0b0","Centrus":"#d0e0c0","Demetrica":"#e0605a","Hyx":"#e0804a","Empra":"#f0d070","Desolation":"#d0605a","Gratar":"#8aa0e0","Alcatras":"#b0b8f0","Gloom":"#80b0a0","Hyve":"#f0c060",
  "Repress":"#aab3c8","End":"#aab3c8","ResearcherxB":"#e8e8e8","Carnate":"#e0a080","Facto":"#c0b0a0","MorvDonalds":"#f0c040"};
-let tv = null, tsel = null, tAll = false, tInfo = localStorage.getItem("wm-tinfo") !== "0";
+let tv = null, tsel = null, tAll = false, tInfo = localStorage.getItem("wm-tinfo2") !== "0";
 const TV0 = () => (document.body.classList.contains("home") && innerWidth > 1000) ? [-215, -80, 2160, 1260] : [-60, -40, 2120, 1220];
 function tIcon(n){ if (n === "End") n = "Repress"; return (window.ICONS && ICONS[n]) || iconFor(n) || ""; }
 function tStatus(n){ return isV(n) ? "vis" : isU(n) ? "unl" : available(n) ? "reach" : "locked"; }
@@ -1218,12 +1221,12 @@ const HZFILL = {h0:"#3f8f5a", h1:"#7d9a2f", h2:"#b8860b", h3:"#cf6a17", h4:"#c03
 function tInfoBadge(n, x, y, R, lab){
   const m = M[n]; if (!m || n === "End") return "";
   const hz = ({"B.. for Bees":"B", "I see you":"??", "Quack":"Qk"})[m.hazard] || m.hazard || "?";
-  const pr = m.price ? "▮" + m.price : "Free";
-  const h = 22, h2 = 17;
-  const w1 = Math.max(hz.length * 9.4 + 10, 26), w2 = pr.length * 7.4 + 9;
-  const hx = x - R - w1 + 6, hy = y - h / 2, px = x - w2 / 2, py = y + R - 4;
-  return `<g class="tinfo" aria-hidden="true"><rect x="${hx}" y="${hy}" width="${w1}" height="${h}" rx="5" fill="${HZFILL[hzClass(m.hazard)]}" stroke="#07080c" stroke-width="2"/><text x="${hx + w1 / 2}" y="${hy + 16}" text-anchor="middle" fill="#fff">${esc(hz)}</text>
-    <rect class="pr" x="${px}" y="${py}" width="${w2}" height="${h2}" rx="4"/><text class="prt" x="${x}" y="${py + 12.5}" text-anchor="middle" fill="${m.price ? "#f3c27a" : "#5cc28a"}">${esc(pr)}</text></g>`;
+  const pr = m.price ? String(m.price) : "Free";
+  const h = 18, h2 = 17;
+  const w1 = Math.max(hz.length * 8 + 8, 22), w2 = pr.length * 7.4 + (m.price ? 5 : 0) + 9;
+  const hx = x - R - w1 + 5, hy = y - h / 2, px = x - w2 / 2, py = y + R - 4;
+  return `<g class="tinfo" aria-hidden="true"><rect x="${hx}" y="${hy}" width="${w1}" height="${h}" rx="5" fill="${HZFILL[hzClass(m.hazard)]}" stroke="#07080c" stroke-width="2"/><text class="hzt" x="${hx + w1 / 2}" y="${hy + 13.5}" text-anchor="middle" fill="#fff">${esc(hz)}</text>
+    <rect class="pr" x="${px}" y="${py}" width="${w2}" height="${h2}" rx="4"/><text class="prt" x="${x}" y="${py + 12.5}" text-anchor="middle" fill="${m.price ? "#f3c27a" : "#5cc28a"}">${m.price ? `<tspan font-size="8.5" dy="-1">▮</tspan><tspan dy="1">${esc(pr)}</tspan>` : esc(pr)}</text></g>`;
 }
 function treeSvg(){
   const stars = []; let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -1275,7 +1278,7 @@ function treeSide(n){
   const tips = guideHazards(n, m, true);
   return `<div class="eyebrow">${m.num ? "Moon " + m.num : "Moon"} · ${({vis:"Visited",unl:"Unlocked",reach:"Reachable now",locked:"Locked"})[st]}</div>
     <h2>${esc(n)}</h2>
-    <div class="row">${hzPill(m.hazard)}<span class="chip mono">${m.price ? "▮" + m.price : "Free"}</span>${m.scrap?.[1] != null ? `<span class="chip mono">${m.scrap[0]}–${m.scrap[1]} scrap</span>` : ""}${m.est ? `<span class="chip mono">~${m.est} loot</span>` : ""}</div>
+    <div class="row">${hzPill(m.hazard)}<span class="chip mono">${m.price ? CR + m.price : "Free"}</span>${m.scrap?.[1] != null ? `<span class="chip mono">${m.scrap[0]}–${m.scrap[1]} scrap</span>` : ""}${m.est ? `<span class="chip mono">~${m.est} loot</span>` : ""}</div>
     <div class="row"><button class="toggle tu" aria-pressed="${u}" id="tsu">${u ? "✓ Unlocked" : "Mark unlocked"}</button><button class="toggle tv" aria-pressed="${v}" id="tsv">${v ? "✓ Visited" : "Mark visited"}</button>${m.slug ? `<a class="btn primary" style="text-decoration:none;margin-left:auto" href="#${m.slug}">Open guide</a>` : ""}</div>
     ${m.indoor ? `<p style="font-size:13px;margin:6px 0 0;color:var(--muted)">Inside: ${esc(m.indoor)}<br>Outside: ${esc(m.outdoor || "–")}</p>` : ""}
     ${(m.interiors || []).length ? `<h3>Possible interiors (click to open)</h3>${intTiles(m.interiors)}` : ""}
@@ -1283,7 +1286,7 @@ function treeSide(n){
 }
 function treeOverview(){
   const {wes, uN, vN, avail} = progressNumbers();
-  const btn = n => `<button class="pick" data-pick="${esc(n)}">${hzPill(M[n].hazard)}<span>${esc(n)}</span><small>${M[n].price ? "▮" + M[n].price : "Free"}</small></button>`;
+  const btn = n => `<button class="pick" data-pick="${esc(n)}">${hzPill(M[n].hazard)}<span>${esc(n)}</span><small>${M[n].price ? CR + M[n].price : "Free"}</small></button>`;
   const sure = avail.filter(n => incoming(n).some(x => isU(x.src) && !x.random)), luck = avail.filter(n => !sure.includes(n));
   return `<div class="eyebrow">Crew progress</div><h2>Moon map</h2>
     <div class="row"><span class="chip mono">${uN}/${wes.length} unlocked</span><span class="chip mono">${vN} visited</span><span class="chip mono">${avail.length} reachable</span></div>
@@ -1343,7 +1346,7 @@ function wirePanZoom(svg){
   $("#tzin").onclick = () => zoom(1 / 1.3); $("#tzout").onclick = () => zoom(1.3);
   $("#tzreset").onclick = () => { tv = TV0(); apply(); };
   $("#tall").onchange = e => { tAll = e.target.checked; renderTree(); };
-  $("#tinfo").onchange = e => { tInfo = e.target.checked; localStorage.setItem("wm-tinfo", tInfo ? "1" : "0"); renderTree(); };
+  $("#tinfo").onchange = e => { tInfo = e.target.checked; localStorage.setItem("wm-tinfo2", tInfo ? "1" : "0"); renderTree(); };
   const fb = $("#tfull"), tree = $("#tree");
   fb.textContent = document.fullscreenElement ? "Exit full screen" : "⛶ Full screen";
   fb.onclick = () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (tree.requestFullscreen) tree.requestFullscreen().catch(() => { fb.textContent = "Full screen not available"; }); };
@@ -1376,7 +1379,7 @@ function renderProgress(){
     const m = M[n];
     const ways = incoming(n).filter(x => isU(x.src));
     const body = grouped(ways, x => `<p><span class="from">From ${esc(x.src)}</span><br>${esc(x.how || "See the moon's page.")}</p>`);
-    return `<div class="next-item"><header>${hzPill(m.hazard)}<a href="${esc(moonLink(n))}">${esc(n)}</a><span class="chip mono">${m.price ? "▮" + m.price : "Free"}</span>${m.est ? `<span class="chip mono" title="Estimated loot per day">~${m.est} loot</span>` : ""}<button class="toggle tu" aria-pressed="false" data-u="${esc(n)}" style="margin-left:auto">Mark unlocked</button></header>${body}</div>`;
+    return `<div class="next-item"><header>${hzPill(m.hazard)}<a href="${esc(moonLink(n))}">${esc(n)}</a><span class="chip mono">${m.price ? CR + m.price : "Free"}</span>${m.est ? `<span class="chip mono" title="Estimated loot per day">~${m.est} loot</span>` : ""}<button class="toggle tu" aria-pressed="false" data-u="${esc(n)}" style="margin-left:auto">Mark unlocked</button></header>${body}</div>`;
   };
   const sure = avail.filter(n => incoming(n).some(x => isU(x.src) && !x.random));
   const luck = avail.filter(n => !sure.includes(n));
@@ -1428,7 +1431,7 @@ function renderMoons(){
       <td><div style="display:flex;gap:4px"><button class="toggle tu" aria-pressed="${u}" data-u="${esc(n)}" title="Unlocked">${u ? "Unlocked" : "Locked"}</button><button class="toggle tv" aria-pressed="${v}" data-v="${esc(n)}" title="Visited">${v ? "Visited" : "Not yet"}</button></div></td>
       <td><div class="nm">${ic ? `<img src="${esc(ic)}" alt="" loading="lazy">` : ""}<a href="${esc(moonLink(n))}"${ext}>${esc(n)}</a>${m.vanilla ? '<span class="vtag">vanilla</span>' : ""}${a ? '<span class="tag g">reachable</span>' : ""}</div></td>
       <td class="n">${m.num ?? ""}</td>
-      <td class="n">${m.price ? "▮" + m.price : "Free"}</td>
+      <td class="n">${m.price ? CR + m.price : "Free"}</td>
       <td>${hzPill(m.hazard)}</td>
       <td class="n">${m.scrap && m.scrap[1] != null ? `${m.scrap[0]}–${m.scrap[1]}` : "–"}</td>
       <td class="n">${m.est ? "~" + m.est : "–"}</td>
@@ -1609,7 +1612,7 @@ function renderPage(slug){
   let facts = "";
   if (isMoon && m){
     facts = `<dl class="facts">
-      <dt>Cost</dt><dd>${m.price ? "▮" + m.price : "Free"}</dd>
+      <dt>Cost</dt><dd>${m.price ? CR + m.price : "Free"}</dd>
       <dt>Hazard</dt><dd>${hzPill(m.hazard)}</dd>
       <dt>Scrap</dt><dd>${m.scrap?.[1] != null ? m.scrap[0] + "–" + m.scrap[1] : "–"}${m.avgItem ? ` · avg item ~${m.avgItem}` : ""}</dd>
       <dt>Est. loot/day</dt><dd>${m.est ? "~" + m.est : "–"}</dd>
