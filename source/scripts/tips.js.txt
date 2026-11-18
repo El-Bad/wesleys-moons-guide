@@ -1,0 +1,133 @@
+const TIPS = {
+ "Galetry": {
+  g: ["Your hub: free, no enemies, nothing to loot.",
+   "Log translator: immediately left inside the museum. Projector for videotapes: go left, climb the ladder on the right, then the stairs on the right.",
+   "Sell desk: right side inside the museum. Put scrap on the counter just right of the entrance and press the button to send it over.",
+   "Gift shop: small building right (north) of the ship. Failsafe and Quickstart floppy disks are under the counter on the right (Failsafe needs mod v7.0.0+).",
+   "Hidden backstage: interact with the Hoarding Bug bust the flashlight points at. Step off the stairs before they move. The three special apparatus slots are back there.",
+   "Fabricator: behind the locked door in the fire exit, left of the ship. Needs a Fabricated key crafted on Gratar."],
+  h: ["Moving backstage stairs can kill you."]
+ },
+ "Asteroid-13": {
+  g: ["Free, hazard B. Flip the exterior power switch first so the whole moon is lit; flip it again if the power drops.",
+   "Follow the red flares outside to Geoffrey's final message (always spawns) and translate it to unlock Junic.",
+   "Coil-Heads: one player keeps looking at them while the others move. Travel in pairs, never turn your back, and use a stun grenade, zap gun or radar booster to escape.",
+   "The clock is hidden: have someone count time and head back earlier than feels necessary.",
+   "Grab the log before anyone pulls the Apparatus: pulling it kills the power switch.",
+   "Skip Eclipsed days. Sell BIO-HXNV7 (128–200). Asten Lab interior can have BIO samples worth up to ~490. Recovered secret log unlocks Cosmocos (very dangerous, for later)."],
+  h: ["Coil-Heads inside and outside: unkillable, 90 damage every 0.2 s on contact.",
+   "Clock hidden on this moon.", "Power switch randomly turns off; dead during Eclipse or after the Apparatus is pulled.",
+   "Eclipsed: no lights and 8 enemies spawn at landing.", "Interior is always foggy."]
+ },
+ "Junic": {
+  g: ["Free, hazard C. Good farm moon; interior is almost always the Atlantean Citadel.",
+   "Flares on the left of the ship lead to Geoffrey's log 4 (unlocks Etern). The note on a tent wall unlocks Chasm.",
+   "Walk around rose patches and look down while carrying loot. If a path is blocked by a fallen tree or rock, take another route.",
+   "Inside: grab both Dungeon keys for the two Beholder's Eyes (180 each). Before taking the first Eye, send everyone outside or to the Great Hall's 3rd floor; the second Eye is safe.",
+   "Pull the lever at the entrance to raise the Vault, solve its puzzle (Roman-numeral basins, 5-button fountains or observatory stars), then pull the Vault's own lever. Earlier in the day = better crown (160–588).",
+   "Jump over axe pressure plates. In eye-trap rooms, stay out of the eye's view or run through.",
+   "Only enter the ritual circle while holding Jack's skull (unlocks Roart)."],
+  h: ["Carnivorous roses: small 22 damage, large 90 damage (they trap you).",
+   "Falling rocks and trees block paths at set times.", "Ritual circle by the fire exit: instant death without Jack's skull.",
+   "Interior floods for ~2 minutes when the first Beholder's Eye is taken.",
+   "Axe traps 100 damage. Eye traps fire spikes for 33 damage.", "Jetpacking up the Sunroof: 666 damage."]
+ },
+ "Infernis": {
+  g: ["280 credits, hazard B+. Mostly an unlock moon: loot is heavy and cheap.",
+   "Atlantica: straight behind the ship, right at the first crystal, follow the path to a map on the ground between three crystals. Interact with it and wait for the voice to finish.",
+   "Acidir: follow the floodlights south to a camp and translate Cunningham's travel log 1.",
+   "Main entrance: path behind-left (south) of the ship, on the right. Use the easy fire exit straight from the main entrance past the floodlight.",
+   "Stay off lava edges and pits, don't sprint jumps with heavy loot, and watch for falling volcanic rock.",
+   "Inside, look up for Snare Fleas and walk slowly to spot webs. Be on board before take-off: lava floods everything."],
+  h: ["Lava: 10 damage per hit (20 in pits), works like quicksand.", "Volcano drops molten rock on the exterior; dust reduces vision inside.",
+   "Lava covers the surface when the ship leaves.", "Bugs inside: Bunker Spiders, Hoarding Bugs, Snare Fleas, Circuit Bees, Honey Stingers."]
+ },
+ "Motra": {
+  g: ["15 credits, hazard B. Cheap and fairly safe.",
+   "Turn off the mortars first: lever behind the ship, up the path on the right above the fire exit, then left at the next intersection.",
+   "Brackens: glance at them, then back off; don't stare. Masked: check that teammates are actually talking before trusting them.",
+   "Radio message 1 on the exterior unlocks Fission-C and Oldred.",
+   "Inside drops worth grabbing: Secret files (Alcatras), Teach the disloyal tape (Crowd), Filitrios tape, Floppy disk (Dreck)."],
+  h: ["Mortars target players outside (4 shots at once when Eclipsed).", "Brackens (50% of indoor spawns) and Masked.", "Eyeless Dogs outside."]
+ },
+ "Atlantica": {
+  g: ["130 credits, hazard B. Usually Atlantean Citadel, so Beholder's Eyes and a Vault puzzle like Junic.",
+   "Loot before 10:00 and between 12:30 and 4:30; be outside or up high during the floods.",
+   "Leave through a fire exit late in the day once the main entrance has sunk.",
+   "Lecaro: go left of the ship to a fire exit with a bridge on its right, push the bridge down, and interact with the map on the ground."],
+  h: ["Interior floods twice a day: ~10:00–12:30 and ~4:30–7:00.", "Main entrance sinks from 4:30 PM (only a jetpack gets you out that way).",
+   "Atlantean Citadel traps: axe plates, eye traps.", "Spore Lizards, Hoarding Bugs, Slimes, Thumpers inside."]
+ },
+ "Lecaro": {
+  g: ["630 credits, hazard A+. Best loot for the price (~50–60 scrap).",
+   "Grab the shovel that always spawns behind the ship and break the stalagmite blocking the path (a pickaxe one-shots them).",
+   "Keep shovels and knives away from gunpowder barrels.",
+   "Ride the minecart right of the main entrance to carry loot; never try to jump the gap in the tracks.",
+   "Thalasso: after the stalagmite keep right past the lava river; just before the fire exit there's a small opening on the left with the map. Step away right after the cutscene."],
+  h: ["Gunpowder barrels: outside they explode when hit, inside they get lit and blow up.", "Geyser in the minecart track gap: instant death.",
+   "Falling rocks outside when you walk underneath.", "Stalactites inside.", "Rock falls on the Thalasso map after its cutscene.",
+   "Bunker Spiders, Slimes, Brackens, Nutcrackers inside; Eyeless Dogs outside."]
+ },
+ "Thalasso": {
+  g: ["350 credits, hazard B++. Atlantean Citadel inside.",
+   "Left temple path: stand on the pillars between pushing walls. Right path: wait in the gaps between the spiked walls.",
+   "Crushers: stop in the safe spot between each one.",
+   "Utril: left from the front of the ship, left again, straight on to the drowning chamber. When it floods, jump on the pillars or duck into the fire exit; once it drains, crouch into the hole at the bottom.",
+   "Placing a Beholder's Eye on the Heart Chamber pedestal opens a room with seven Human hearts."],
+  h: ["Pushing walls into a death pit; spiked crushing walls.", "Crushers near a fire exit.", "Drowning chamber fills when someone is at the bottom.",
+   "Fish enemies and Slimes; Eyeless Dogs outside."]
+ },
+ "Utril": {
+  g: ["180 credits, hazard B+. One of the easier moons.",
+   "Keep Harrington's research 4 if you find it: it's the destiny item for Ending 4.",
+   "Heal up before going under acid tanks, or send the healthiest player.",
+   "Cubatres: fire exit beside the test tubes, follow the path down, opening on the right.",
+   "Leave the two marked trees alone unless everyone is clear of the main entrance. Don't use the altar."],
+  h: ["Acid tanks spray when an injured player walks under (5 damage per hit), and leave a puddle for ~70 s.",
+   "Hitting both marked trees drops a platform on the main entrance.", "Bunker Spiders and Spore Lizards."]
+ },
+ "Fission-C": {
+  g: ["600 credits, hazard A, ~33–39 scrap.",
+   "Bring weed killer. Leave rooms when \"air filter overwhelmed\" shows, and spray infected teammates before they reach 100%.",
+   "Close radioactive barrels by interacting with them (costs a little HP), or route around them.",
+   "Do outdoor trips early: toxic waste rises during the day.", "Don't use the altar."],
+  h: ["Cadaver Growth is a dominant indoor threat.", "Toxic waste outside: 12 damage per hit, rises over the day.",
+   "Radioactive barrels inside: 1 damage per hit nearby.", "Nutcrackers, Butlers, Masked, Coil-Heads inside; Jesters and Eyeless Dogs outside."]
+ },
+ "Oldred": {
+  g: ["720 credits, hazard S+. Go for Radio message 2 on the exterior (unlocks Trite) and oil barrels for Repress.",
+   "When a hanging mine's beeping speeds up, leave the area at once; walls don't protect you.",
+   "Time catwalk crossings between geyser bursts.",
+   "Graffiti 'WHERE IS DUCKSTROID-14?' unlocks Duckstroid-14."],
+  h: ["Hanging mines: 10 damage on contact; their explosion goes through walls and can one-shot.", "Boiling oil geysers on catwalks: 3 damage per hit.",
+   "Old Birds, Baboon Hawks and Coil-Heads outside.", "Backoiler Spillfish, Slimes, Spore Lizards, Thumpers inside."]
+ },
+ "MorvDonalds": {
+  g: ["500 credits, hazard A+, unlocked by default. 97% of scrap is Mrov Sauce (~101 each, 7 lb): best quick money.",
+   "Bring a shovel for Hoarding Bugs (2 hits). Stick together in the big interior.",
+   "Be back before evening."],
+  h: ["Hoarding Bugs and Masked inside.", "Eyeless Dogs, Forest Keepers, Circuit Bees outside.", "Large interior: easy to get lost."]
+ },
+ "Repress": {
+  g: ["1250 credits, hazard S+. Every ending happens here. Time runs slower (0.75x).",
+   "Bring an Apparatus, 2 oil barrels, an Untampered operating panel and a destiny item, all in one visit.",
+   "Steps: apparatus in the slot left of the main entrance → 2 barrels beside the ship → keypad, top lever, bottom lever, top lever → run to the ship, panel on its terminal, destiny item in the slot left of it.",
+   "At least one Gratar videotape spawns inside."],
+  h: ["Progress on the abandoned ship resets when you leave orbit.", "Nutcrackers, Barbers, Slimes inside; Eyeless Dogs outside."]
+ },
+ "Gloom": {
+  g: ["220 credits, hazard B. Good cheap money.",
+   "Track time yourself (clock hidden). Stay close in the fog.",
+   "Detonator (SW of the ship, follow the lanterns) opens two fire exits but caves in the main entrance; only press it once everyone is out.",
+   "Chainsaws spawn here (weapon, sells ~82). Don't use the altar."],
+  h: ["Fog inside and out.", "Clock hidden.", "Detonator collapses the main entrance cave.", "Maneater, Bunker Spiders, Brackens, Spore Lizards."]
+ },
+ "Atlantean Citadel": {
+  g: ["Two Beholder's Eyes (180 each) behind doors that need Dungeon keys; two keys always spawn.",
+   "Before taking the first Eye, move everyone outside, to the Great Hall's 3rd floor, the Grates or the Sunroof stairs.",
+   "Pull the lever in the entrance area to raise the Vault; its lit symbols show the puzzle. After solving it, pull the Vault's own lever.",
+   "5-button fountains: press one button; if it stays down it's next, if all reset try another. Each fountain has its own order.",
+   "Lost in the Great Hall? It always connects to the main entrance: check all three floors and the crouch tunnels."],
+  h: ["Floods for ~2 minutes after the first Beholder's Eye is taken.", "Axe pressure plates: 100 damage.", "Eye traps: 33 damage spikes if it sees you.", "Jetpacking up the Sunroof: 666 damage."]
+ }
+};

@@ -1,0 +1,134 @@
+/* ---------- progression tree (layout after the community map by WhiteA12) ---------- */
+const TPOS = {
+ "Galetry":[695,65], "Repress":[1235,55], "MorvDonalds":[1120,55],
+ "Dreck":[145,155], "Core":[145,280], "Faith":[145,405], "Berunah":[145,522],
+ "Crowd":[340,158], "Narcotic":[340,280], "Descent":[340,405], "Extort":[340,520], "Release":[340,637],
+ "Infernis":[595,165], "Atlantica":[497,287], "Lecaro":[500,407], "Thalasso":[505,522], "Utril":[507,640], "Cubatres":[598,700],
+ "Acidir":[690,287], "Polarus":[690,465], "Cosmocos":[690,640], "Glimmer":[795,688],
+ "Asteroid-13":[895,160], "Junic":[895,287], "Roart":[795,322], "Chasm":[990,322], "Spine":[1078,368], "Etern":[895,415], "Dune":[988,457], "Glace":[895,530], "Calist":[900,648],
+ "Hyx":[900,768], "Empra":[900,875],
+ "Motra":[1203,172], "Fission-C":[1290,218], "Selector":[1376,262], "Dormant":[1466,306], "Xenphir":[1556,352],
+ "Oldred":[1203,292], "Duckstroid-14":[1290,368], "Trite":[1206,422], "Heap":[1288,472], "Vindict":[1062,578], "Filitrios":[1206,542], "Centrus":[1286,596], "Demetrica":[1206,648],
+ "Desolation":[1540,480], "Facto":[1110,700], "Gratar":[1196,835], "Alcatras":[1430,760], "Gloom":[1585,760], "Hyve":[1476,960],
+ "ResearcherxB":[130,1050], "Carnate":[685,1000], "End":[900,1000]
+};
+const TLAB = {"Spine":"r","Selector":"r","Dormant":"r","Xenphir":"r","Dune":"r","Heap":"r","Glimmer":"r","Cubatres":"r","Centrus":"r","Duckstroid-14":"r","Fission-C":"r","Chasm":"r"};
+const TEDGES = [
+ ["Galetry","Dreck"],["Galetry","Crowd"],["Galetry","Infernis"],["Galetry","Asteroid-13"],["Galetry","Motra"],
+ ["Dreck","Core"],["Core","Faith"],["Faith","Berunah"],
+ ["Crowd","Narcotic"],["Narcotic","Descent"],["Descent","Extort"],["Extort","Release"],
+ ["Infernis","Atlantica"],["Infernis","Acidir"],["Atlantica","Lecaro"],["Lecaro","Thalasso"],["Thalasso","Utril"],["Utril","Cubatres"],
+ ["Acidir","Polarus"],["Polarus","Cosmocos"],["Cosmocos","Glimmer"],
+ ["Asteroid-13","Junic"],["Junic","Roart"],["Junic","Chasm"],["Junic","Etern"],["Chasm","Spine"],["Etern","Dune"],["Etern","Glace"],["Glace","Calist"],["Glace","Vindict"],
+ ["Motra","Fission-C"],["Motra","Oldred"],["Fission-C","Selector"],["Selector","Dormant"],["Dormant","Xenphir"],["Selector","Vindict"],
+ ["Oldred","Duckstroid-14"],["Oldred","Trite"],["Trite","Heap"],["Trite","Filitrios"],["Trite","Vindict"],["Filitrios","Demetrica"],["Filitrios","Centrus"],
+ ["Polarus","Desolation"],["Utril","Desolation"],["Motra","Alcatras"],["Demetrica","Alcatras"],
+ ["Calist","Hyx","s"],["Cosmocos","Hyx","s"],["Demetrica","Hyx","s"],["Hyx","Empra"],
+ ["Berunah","End","s"],["Release","End","s"],["Utril","End","s"],["Empra","End","s"],["Carnate","End","s"],["Repress","End","s"],
+ ["Vindict","ResearcherxB","s"],["ResearcherxB","Carnate","s"],["Repress","Gratar"]
+];
+const BRANCH = {"Galetry":"#8fd16a","Dreck":"#e9dfe3","Core":"#b9a7c9","Faith":"#d9a7d6","Berunah":"#f0d27a","Crowd":"#8fbf63","Narcotic":"#c49a7a","Descent":"#f1e7c9","Extort":"#bfe8ee","Release":"#e09a5c",
+ "Infernis":"#e0573a","Atlantica":"#7fc7d6","Lecaro":"#e0603a","Thalasso":"#9aaad6","Utril":"#b39dd0","Cubatres":"#c9a07a","Acidir":"#6cc95a","Polarus":"#e6f3f7","Cosmocos":"#d9b8f2","Glimmer":"#d9b8f2",
+ "Asteroid-13":"#d0d0d0","Junic":"#a6ec74","Roart":"#7fc79a","Chasm":"#b8b88a","Spine":"#e6e6f7","Etern":"#f0d27a","Dune":"#e8d88a","Glace":"#e6eef7","Calist":"#d9a87a",
+ "Motra":"#d8f0e0","Fission-C":"#f0c060","Selector":"#d6e6f0","Dormant":"#c9e07a","Xenphir":"#c0c8d8","Oldred":"#e0d0a8","Duckstroid-14":"#f5c518","Trite":"#d0c0a0","Heap":"#c0b090","Vindict":"#f0e8e8",
+ "Filitrios":"#8fe0b0","Centrus":"#d0e0c0","Demetrica":"#e0605a","Hyx":"#e0804a","Empra":"#f0d070","Desolation":"#d0605a","Gratar":"#8aa0e0","Alcatras":"#b0b8f0","Gloom":"#80b0a0","Hyve":"#f0c060",
+ "Repress":"#aab3c8","End":"#aab3c8","ResearcherxB":"#e8e8e8","Carnate":"#e0a080","Facto":"#c0b0a0","MorvDonalds":"#f0c040"};
+let tv = null, tsel = "Junic", tAll = false;
+function tIcon(n){ return (window.ICONS && ICONS[n]) || iconFor(n) || ""; }
+function tStatus(n){ return isV(n) ? "vis" : isU(n) ? "unl" : available(n) ? "reach" : "locked"; }
+function tPath(a, b){
+  const [x1,y1] = TPOS[a], [x2,y2] = TPOS[b]; const r = 30;
+  const dx = x2 - x1, dy = y2 - y1, d = Math.hypot(dx, dy) || 1;
+  const sx = x1 + dx / d * r, sy = y1 + dy / d * r, ex = x2 - dx / d * (r + 6), ey = y2 - dy / d * (r + 6);
+  const bend = Math.min(60, d * .18), nx = -dy / d * bend, ny = dx / d * bend;
+  return `M${sx.toFixed(1)},${sy.toFixed(1)} Q${((sx + ex) / 2 + nx).toFixed(1)},${((sy + ey) / 2 + ny).toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}`;
+}
+function treeSvg(){
+  const stars = []; let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 260; i++) stars.push(`<circle cx="${(rnd() * 2000).toFixed(0)}" cy="${(rnd() * 1150).toFixed(0)}" r="${(rnd() * 1.4 + .3).toFixed(1)}" fill="#fff" opacity="${(rnd() * .6 + .15).toFixed(2)}"/>`);
+  const main = new Set(TEDGES.map(e => e[0] + ">" + e[1]));
+  const alt = [];
+  for (const [n, m] of Object.entries(M)){
+    if (!TPOS[n]) continue;
+    for (const s of (m.sources || [])){
+      if (!TPOS[s] || main.has(s + ">" + n)) continue;
+      if (tAll || n === tsel || s === tsel) alt.push([s, n]);
+    }
+  }
+  const rel = e => tsel && (e[0] === tsel || e[1] === tsel);
+  const anyRel = TEDGES.some(rel) || alt.some(rel);
+  const edgeCol = (a, b) => isU(b) ? "#5cc28a" : (isU(a) ? "#f0a23a" : (BRANCH[a] || "#8a8f9a"));
+  const mk = (a, b) => isU(b) ? "g" : isU(a) ? "o" : "n";
+  const edges = TEDGES.map(e => `<path class="edge ${e[2] === "s" ? "special" : ""} ${anyRel && !rel(e) ? "dim" : ""} ${rel(e) ? "hl" : ""}" d="${tPath(e[0], e[1])}" stroke="${edgeCol(e[0], e[1])}" marker-end="url(#ah-${mk(e[0], e[1])})"/>`).join("")
+    + alt.map(e => `<path class="edge alt ${rel(e) ? "hl" : ""}" d="${tPath(e[0], e[1])}" stroke="${isU(e[0]) ? "#f0a23a" : "#8a8f9a"}" marker-end="url(#ah-${isU(e[0]) ? "o" : "n"})"/>`).join("");
+  const nodes = Object.entries(TPOS).filter(([n]) => M[n]).map(([n, [x, y]]) => {
+    const st = tStatus(n), ic = tIcon(n), lab = TLAB[n] || "t";
+    const big = n === "Galetry" || n === "End";
+    const tx = lab === "r" ? x + 36 : x, ty = lab === "r" ? y + 5 : y - (big ? 44 : 36), anchor = lab === "r" ? "start" : "middle";
+    const col = st === "locked" ? "#8a8f9a" : (BRANCH[n] || "#e9e4d8");
+    const R = big ? 33 : 27, I = big ? 60 : 50;
+    return `<g class="node ${st} ${n === tsel ? "sel" : ""}" data-n="${esc(n)}" tabindex="0" role="button" aria-label="${esc(n)}, ${({vis:"visited",unl:"unlocked",reach:"reachable now",locked:"locked"})[st]}">
+      <circle class="halo" cx="${x}" cy="${y}" r="${R + 7}"/>
+      <circle cx="${x}" cy="${y}" r="${R}" fill="#151821"/>
+      ${ic ? `<image href="${esc(ic)}" x="${x - I / 2}" y="${y - I / 2}" width="${I}" height="${I}" preserveAspectRatio="xMidYMid meet" style="image-rendering:pixelated"/>` : `<text x="${x}" y="${y + 7}" text-anchor="middle" fill="#cfcabd" style="font-size:20px">${esc(n[0])}</text>`}
+      <circle class="ring" cx="${x}" cy="${y}" r="${R + 1}"/>
+      <text x="${tx}" y="${ty}" text-anchor="${anchor}" fill="${col}" style="${big ? "font-size:26px" : ""}">${esc(n === "End" ? "Repress / End" : n)}</text>
+    </g>`;
+  }).join("");
+  const ah = (id, c) => `<marker id="ah-${id}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`;
+  const zones = `<g fill="none" stroke="#3a3f4a" stroke-dasharray="3 6" stroke-width="1.5"><rect x="1370" y="405" width="340" height="265" rx="8"/><rect x="1010" y="740" width="360" height="390" rx="8"/><rect x="1385" y="690" width="335" height="440" rx="8"/><rect x="10" y="935" width="560" height="200" rx="8"/></g>
+   <g font-family="IBM Plex Mono, monospace" font-size="13" fill="#8d8a82"><text x="1385" y="426">Alt. unlock: eclipse meteor or crash log</text><text x="1022" y="760">Gratar: tape always on Repress · fabricator</text><text x="1398" y="710">Random-drop moons: files, tapes, hives</text><text x="22" y="956">Triangulation: Vindict + 6 random moons</text></g>`;
+  const note = `<g font-family="IBM Plex Mono, monospace" fill="#cfcabd" font-size="15" text-anchor="middle"><text x="1560" y="132">Repress is unlocked from the start, like Galetry.</text><text x="1560" y="154">Bring a destiny item to Repress for an ending (6 endings).</text><text x="1560" y="180" fill="#8d8a82" font-size="13">Dotted lines: special requirements (apparatus, destiny items, triangulation)</text></g>`;
+  return `<svg id="treesvg" viewBox="${tv.join(" ")}" xmlns="http://www.w3.org/2000/svg" aria-label="Moon progression tree">
+    <defs>${ah("g", "#5cc28a")}${ah("o", "#f0a23a")}${ah("n", "#8a8f9a")}</defs>
+    <g>${stars.join("")}</g>${zones}${note}<g>${edges}</g><g>${nodes}</g></svg>`;
+}
+function treeSide(n){
+  const m = M[n]; if (!m) return "";
+  const u = isU(n), v = isV(n), st = tStatus(n);
+  const ways = (m.sources || []).map(s => { const x = (M[s]?.unlocks || []).find(k => k.to === n); return `<div class="way"><b>${isU(s) ? "✓ " : ""}From ${esc(s)}</b> ${x ? `<span class="tag ${isRandom(x.how) ? "r" : "g"}">${isRandom(x.how) ? "Random" : "Guaranteed"}</span><br>${esc(x.how)}` : ""}</div>`; }).join("")
+    || `<div class="way">${m.default ? "Unlocked by default." : n === "Hyx" ? "Insert the Bloody, Cosmic and Royal apparatus in Galetry's hidden backstage." : "See the moon's page."}</div>`;
+  const outs = (m.unlocks || []).map(x => `<div class="way"><b>${esc(x.to)}</b> <span class="tag ${isRandom(x.how) ? "r" : "g"}">${isRandom(x.how) ? "Random" : "Guaranteed"}</span><br>${esc(x.how)}</div>`).join("") || `<div class="way">Doesn't unlock other moons.</div>`;
+  const tips = TIPS[n] ? `<h3>Crew quick guide</h3><ul class="tip">${TIPS[n].map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : "";
+  return `<div class="eyebrow">${m.num ? "Moon " + m.num : "Moon"} · ${({vis:"Visited",unl:"Unlocked",reach:"Reachable now",locked:"Locked"})[st]}</div>
+    <h2>${esc(n)}</h2>
+    <div class="row">${hzPill(m.hazard)}<span class="chip mono">${m.price ? "▮" + m.price : "Free"}</span>${m.scrap?.[1] != null ? `<span class="chip mono">${m.scrap[0]}–${m.scrap[1]} scrap</span>` : ""}${m.est ? `<span class="chip mono">~${m.est} loot</span>` : ""}</div>
+    <div class="row"><button class="toggle tu" aria-pressed="${u}" id="tsu">${u ? "✓ Unlocked" : "Mark unlocked"}</button><button class="toggle tv" aria-pressed="${v}" id="tsv">${v ? "✓ Visited" : "Mark visited"}</button>${m.slug ? `<a class="btn primary" style="text-decoration:none;margin-left:auto" href="#${m.slug}">Open guide</a>` : ""}</div>
+    ${m.indoor ? `<p style="font-size:13px;margin:6px 0 0;color:var(--muted)">Inside: ${esc(m.indoor)}<br>Outside: ${esc(m.outdoor || "–")}</p>` : ""}
+    ${tips}<h3>How to get here</h3>${ways}<h3>Unlocks from here</h3>${outs}`;
+}
+function renderTree(){
+  const host = $("#tree"); if (!host) return;
+  if (!tv) tv = [0, 0, 2000, 1150];
+  const stage = $(".tree-stage", host);
+  stage.querySelector("svg")?.remove();
+  stage.insertAdjacentHTML("afterbegin", treeSvg());
+  $(".tree-side", host).innerHTML = tsel ? treeSide(tsel) : `<p>Click a moon.</p>`;
+  const svg = $("#treesvg");
+  $$(".node", svg).forEach(g => {
+    const pick = () => { tsel = g.dataset.n; renderTree(); };
+    g.addEventListener("click", () => { if (!svg.dataset.moved) pick(); });
+    g.addEventListener("dblclick", () => { const m = M[g.dataset.n]; if (m?.slug) location.hash = m.slug; });
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+  });
+  const su = $("#tsu"), sv = $("#tsv");
+  if (su) su.onclick = () => setU(tsel, !isU(tsel));
+  if (sv) sv.onclick = () => setV(tsel, !isV(tsel));
+  wirePanZoom(svg);
+}
+function wirePanZoom(svg){
+  const stage = svg.parentElement;
+  const apply = () => svg.setAttribute("viewBox", tv.join(" "));
+  const scaleOf = () => { const r = svg.getBoundingClientRect(); return Math.max(tv[2] / r.width, tv[3] / r.height); };
+  const toSvg = (cx, cy) => { const r = svg.getBoundingClientRect(); const s = scaleOf(); const ox = (r.width * s - tv[2]) / 2, oy = (r.height * s - tv[3]) / 2; return [tv[0] - ox + (cx - r.left) * s, tv[1] - oy + (cy - r.top) * s]; };
+  const zoom = (f, cx, cy) => { const [px, py] = cx == null ? [tv[0] + tv[2] / 2, tv[1] + tv[3] / 2] : toSvg(cx, cy); const w = Math.min(2600, Math.max(300, tv[2] * f)); const k = w / tv[2]; tv = [px - (px - tv[0]) * k, py - (py - tv[1]) * k, w, tv[3] * k]; apply(); };
+  svg.addEventListener("wheel", e => { e.preventDefault(); zoom(e.deltaY > 0 ? 1.15 : 1 / 1.15, e.clientX, e.clientY); }, {passive: false});
+  let drag = null;
+  svg.addEventListener("pointerdown", e => { drag = {x: e.clientX, y: e.clientY, v: tv.slice(), s: scaleOf()}; delete svg.dataset.moved; });
+  svg.addEventListener("pointermove", e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 4){ svg.dataset.moved = 1; stage.classList.add("drag"); } tv = [drag.v[0] - dx * drag.s, drag.v[1] - dy * drag.s, drag.v[2], drag.v[3]]; apply(); });
+  const end = () => { drag = null; stage.classList.remove("drag"); setTimeout(() => delete svg.dataset.moved, 0); };
+  svg.addEventListener("pointerup", end); svg.addEventListener("pointerleave", end);
+  $("#tzin").onclick = () => zoom(1 / 1.3); $("#tzout").onclick = () => zoom(1.3);
+  $("#tzreset").onclick = () => { tv = [0, 0, 2000, 1150]; apply(); };
+  $("#tall").onchange = e => { tAll = e.target.checked; renderTree(); };
+}

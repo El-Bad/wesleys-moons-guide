@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wesley's Moons Field Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a company-issue field manual. Sticky top bar, tracker dashboard as home, each moon a dossier page with stats rail + map + wiki sections. */
+:root{
+  --bg:#efede6; --panel:#fbfaf6; --ink:#1c1f23; --muted:#5d6168; --line:#d6d2c6;
+  --accent:#b85c00; --accent-ink:#fff; --accent-soft:#f6e3cc;
+  --ok:#2f7d4f; --warn:#b07a00; --bad:#b3362c; --special:#6b4bb3;
+  --font-display:"Chakra Petch", "Segoe UI", system-ui, sans-serif;
+  --font-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --radius:6px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121417; --panel:#1a1d21; --ink:#e8e5dd; --muted:#9a9ea6; --line:#2e333a;
+    --accent:#f0a23a; --accent-ink:#1a1206; --accent-soft:#3a2a12;
+    --ok:#5cc28a; --warn:#e2b64a; --bad:#ec6a5e; --special:#a68cf0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121417; --panel:#1a1d21; --ink:#e8e5dd; --muted:#9a9ea6; --line:#2e333a;
+  --accent:#f0a23a; --accent-ink:#1a1206; --accent-soft:#3a2a12;
+  --ok:#5cc28a; --warn:#e2b64a; --bad:#ec6a5e; --special:#a68cf0;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--font-body)}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3,h4{font-family:var(--font-display);text-wrap:balance;line-height:1.2;margin:0}
+img{max-width:100%;height:auto}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line)}
+.top-in{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:10px 20px;max-width:1400px;margin:0 auto}
+.brand{display:flex;align-items:baseline;gap:8px;text-decoration:none;color:var(--ink)}
+.brand b{font-family:var(--font-display);font-size:19px;letter-spacing:.02em}
+.brand span{font-family:var(--font-mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+nav.tabs{display:flex;flex-wrap:wrap;gap:4px}
+nav.tabs a{font-family:var(--font-display);font-weight:600;font-size:14px;text-decoration:none;color:var(--muted);padding:6px 10px;border-radius:var(--radius)}
+nav.tabs a[aria-current="page"]{background:var(--accent-soft);color:var(--ink)}
+.search{position:relative;flex:1 1 220px;max-width:380px;margin-left:auto}
+.search input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);color:var(--ink);font:inherit}
+.results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,.18);max-height:60vh;overflow:auto;display:none}
+.results.show{display:block}
+.results a{display:block;padding:8px 12px;text-decoration:none;color:var(--ink);border-bottom:1px solid var(--line)}
+.results a small{display:block;color:var(--muted);font-size:12px}
+.results a .k{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;color:var(--accent);margin-right:6px}
+.sync{font-family:var(--font-mono);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.sync.on i{background:var(--ok)}
+
+main{max-width:1400px;margin:0 auto;padding:20px}
+.view{display:none}
+.view.on{display:block}
+.loading{padding:60px 0;text-align:center;color:var(--muted);font-family:var(--font-mono)}
+
+/* generic blocks */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.grid{display:grid;gap:16px}
+.eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.btn{font:600 13px var(--font-display);border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 10px;border-radius:var(--radius);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip{display:inline-flex;align-items:center;gap:4px;font:500 12px var(--font-mono);padding:2px 7px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);text-decoration:none;white-space:nowrap}
+.chip.u{border-color:var(--ok);color:var(--ok)}
+.chip.l{color:var(--muted)}
+.haz{display:inline-block;min-width:34px;text-align:center;font:700 12px var(--font-mono);padding:2px 6px;border-radius:4px;color:#fff;white-space:nowrap}
+.haz.h0{background:#3f8f5a}.haz.h1{background:#7d9a2f}.haz.h2{background:#b8860b}.haz.h3{background:#cf6a17}.haz.h4{background:#c0392b}.haz.h5{background:#8e1f4b}.haz.h6{background:#5b3fa0}
+.toggle{font:600 12px var(--font-display);border:1px solid var(--line);background:transparent;color:var(--muted);padding:3px 8px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.toggle[aria-pressed="true"].tu{background:var(--ok);border-color:var(--ok);color:#fff}
+.toggle[aria-pressed="true"].tv{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* home */
+.hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;margin-bottom:16px;align-items:start}
+@media (max-width:900px){.hero{grid-template-columns:1fr}}
+.stats{display:flex;flex-wrap:wrap;gap:20px 32px;margin-top:10px}
+.stat b{display:block;font:700 30px var(--font-display);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:12px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.next h2,.goals h2,.panel h2{font-size:18px;margin-bottom:10px}
+.next-list{display:grid;gap:10px}
+.next-item{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:var(--radius);padding:10px 12px;background:var(--bg)}
+.next-item header{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:4px}
+.next-item header a{font:700 16px var(--font-display);color:var(--ink);text-decoration:none}
+.next-item p{margin:4px 0 0;font-size:14px}
+.next-item .from{font:500 11px var(--font-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tag{font:600 10px var(--font-mono);text-transform:uppercase;letter-spacing:.06em;padding:1px 6px;border-radius:3px}
+.tag.g{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.tag.r{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
+.goals ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.goals li label{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.goals li small{color:var(--muted);display:block}
+.goals h3{font-size:14px;margin:14px 0 6px;color:var(--muted);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.08em;font-weight:500}
+
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+.filters .seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.filters .seg button{border:0;background:var(--panel);color:var(--muted);font:600 13px var(--font-display);padding:6px 10px;cursor:pointer}
+.filters .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.filters label{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
+table.moons{border-collapse:collapse;width:100%;font-size:14px}
+table.moons th{position:sticky;top:0;background:var(--panel);text-align:left;font:600 12px var(--font-display);color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap}
+table.moons th[aria-sort]::after{content:" ↕";opacity:.4}
+table.moons th[aria-sort="ascending"]::after{content:" ↑";opacity:1}
+table.moons th[aria-sort="descending"]::after{content:" ↓";opacity:1}
+table.moons td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.moons tr:last-child td{border-bottom:0}
+table.moons tr.is-u td:first-child{box-shadow:inset 3px 0 var(--ok)}
+table.moons tr.is-a td:first-child{box-shadow:inset 3px 0 var(--accent)}
+table.moons .nm{display:flex;align-items:center;gap:8px;font-weight:600;white-space:nowrap}
+table.moons .nm img{width:28px;height:28px;border-radius:4px;object-fit:cover}
+table.moons .nm a{color:var(--ink);text-decoration:none}
+table.moons .nm a:hover{color:var(--accent)}
+table.moons td.n{text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.moons .src{display:flex;flex-wrap:wrap;gap:4px;max-width:340px}
+.vtag{font:500 10px var(--font-mono);color:var(--muted);border:1px dashed var(--line);border-radius:3px;padding:0 4px}
+
+/* moon / page dossier */
+.crumbs{font:500 12px var(--font-mono);color:var(--muted);margin-bottom:8px}
+.crumbs a{color:var(--muted)}
+.dossier{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.dossier{grid-template-columns:1fr}}
+.rail{position:sticky;top:76px;display:grid;gap:12px}
+@media (max-width:900px){.rail{position:static}}
+.rail .panel{padding:12px}
+.rail h1{font-size:28px}
+.rail .num{font:500 12px var(--font-mono);color:var(--muted)}
+.imgtabs{display:flex;gap:4px;margin:8px 0 6px}
+.imgtabs button{font:500 11px var(--font-mono);border:1px solid var(--line);background:transparent;color:var(--muted);padding:2px 6px;border-radius:3px;cursor:pointer}
+.imgtabs button[aria-pressed="true"]{color:var(--ink);border-color:var(--accent)}
+.rail .main-img{width:100%;border-radius:4px;display:block;cursor:zoom-in;background:var(--bg)}
+dl.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:8px 0 0;font-size:13px}
+dl.facts dt{color:var(--muted);font-size:12px}
+dl.facts dd{margin:0;font-family:var(--font-mono);font-size:12.5px;overflow-wrap:anywhere}
+.status-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.toc{font-size:13px;display:grid;gap:2px}
+.toc a{color:var(--muted);text-decoration:none;padding:2px 0}
+.toc a:hover{color:var(--accent)}
+.toc a.l3{padding-left:12px;font-size:12px}
+.content{min-width:0;display:grid;gap:16px}
+.callout{border:1px solid var(--accent);background:var(--accent-soft);border-radius:var(--radius);padding:14px 16px}
+.callout h2{font-size:17px;margin-bottom:6px}
+.callout ul{margin:0;padding-left:20px}
+.callout li{margin:3px 0}
+.reach .how{display:grid;gap:8px}
+.reach .row{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;border-top:1px solid var(--line);padding-top:8px}
+.reach .row:first-child{border-top:0;padding-top:0}
+.reach .row label{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.reach .row a.mn{font:700 14px var(--font-display);text-decoration:none}
+
+/* wiki sections */
+.wiki{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+.wiki h2.sec{font-size:21px;margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.wiki h3.sec{font-size:17px;margin:18px 0 6px}
+.wiki h4.sec{font-size:15px;margin:14px 0 6px}
+.wiki section + section{margin-top:22px}
+.wiki p{margin:6px 0;max-width:78ch}
+.wiki ul,.wiki ol{max-width:78ch}
+.wiki table{border-collapse:collapse;margin:8px 0;font-size:13.5px}
+.wiki table.wikitable th,.wiki table.wikitable td{border:1px solid var(--line);padding:5px 8px;vertical-align:middle}
+.wiki table.wikitable th{background:var(--bg);font-family:var(--font-display);font-size:12.5px;cursor:pointer;white-space:nowrap}
+.wiki table.wikitable tr:hover td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.wiki table.logtable td,.wiki table.logtable th{padding:6px 8px;vertical-align:top}
+.wiki .tw{overflow-x:auto;max-width:100%}
+.wiki details{margin:8px 0;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg)}
+.wiki details > summary{cursor:pointer;padding:6px 10px;font:600 13px var(--font-display);color:var(--muted)}
+.wiki details[open] > summary{border-bottom:1px solid var(--line)}
+.wiki details > :not(summary){margin:8px 10px}
+.wiki img.icon{width:44px;height:44px;object-fit:contain}
+.wiki img{cursor:zoom-in;border-radius:3px}
+.wiki .tf{display:block;margin:6px 0 4px;padding:6px 8px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);color:var(--ink);font:inherit;font-size:13px;width:min(320px,100%)}
+.spoiler{transition:filter .15s}
+body.hide-spoilers .spoiler{filter:blur(5px);cursor:pointer;user-select:none}
+body.hide-spoilers .spoiler.shown{filter:none}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:8px 0}
+.gal-item{margin:0;background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.gal-item img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;border-radius:0}
+.gal-item figcaption{font-size:12px;padding:6px 8px;color:var(--muted)}
+.infobox-rows{font-size:13px}
+.ints{display:grid;gap:6px;margin-top:2px}
+.int{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:4px 6px;background:var(--bg);font-family:var(--font-body)}
+a.int:hover{border-color:var(--accent)}
+.int img,.int .ph{width:72px;height:48px;object-fit:cover;border-radius:4px;flex:none;background:var(--panel)}
+.int .ph{display:grid;place-items:center;font:700 16px var(--font-display);color:var(--muted)}
+.int b{display:block;font:600 13px var(--font-display)}
+.int small{color:var(--muted);font:500 11px var(--font-mono)}
+.card img{width:64px;height:64px}
+.bcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.bcard{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;text-decoration:none;color:var(--ink)}
+.bcard:hover{border-color:var(--accent)}
+.bcard .bimg{position:relative;aspect-ratio:16/10;background:#0b0c10}
+.bcard .bimg img{width:100%;height:100%;object-fit:cover;display:block}
+.bcard .bimg .bico{position:absolute;left:10px;bottom:10px;width:56px;height:56px;object-fit:cover;border:2px solid var(--panel);border-radius:6px;image-rendering:pixelated}
+.bcard .btxt{padding:10px 12px}
+.bcard b{font:700 17px var(--font-display);display:block}
+.bcard small{color:var(--muted);font-size:12.5px;display:block;margin-top:2px}
+
+/* map */
+.mapbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px}
+.mapbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.mapbar h2{font-size:18px;margin-right:auto}
+.mapscroll{overflow:auto;max-height:78vh;border-radius:4px;background:#000}
+.mapinner{position:relative;width:100%;transition:width .15s}
+.mapinner img.bg{display:block;width:100%;cursor:default}
+.mk{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;padding:0;border:0;background:transparent;cursor:pointer}
+.mk img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
+.mk.dot{width:14px;height:14px;border-radius:50%;border:2px solid #fff}
+.mk[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px;border-radius:50%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:12px}
+.legend label{display:flex;gap:5px;align-items:center;cursor:pointer}
+.legend img{width:18px;height:18px;object-fit:contain}
+.legend .sw{width:12px;height:12px;border-radius:50%;display:inline-block}
+.mapinfo{margin-top:8px;font-size:14px;min-height:22px}
+.mapinfo b{font-family:var(--font-display)}
+
+/* lightbox */
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;flex-direction:column;gap:10px}
+.lb.on{display:flex}
+.lb img{max-width:96vw;max-height:84vh;object-fit:contain;border-radius:4px}
+.lb p{color:#eee;font-size:14px;margin:0;max-width:80ch;text-align:center}
+.lb button{position:absolute;top:14px;right:14px}
+
+/* list pages */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.card{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px;text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}
+.card img{width:52px;height:52px;object-fit:cover;border-radius:4px;flex:none;background:var(--bg)}
+.card b{font-family:var(--font-display);display:block}
+.card small{color:var(--muted);font-size:12px}
+.notes{max-width:900px}
+.notes h2{font-size:20px;margin:22px 0 8px}
+.notes h2:first-child{margin-top:0}
+.notes ul{padding-left:20px}
+.notes li{margin:4px 0}
+.notes code{font-family:var(--font-mono);font-size:13px;background:var(--bg);padding:1px 4px;border-radius:3px;overflow-wrap:anywhere}
+.share textarea{width:100%;min-height:70px;font:12px var(--font-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:6px}
+.foot{max-width:1400px;margin:10px auto 30px;padding:0 20px;font-size:12px;color:var(--muted)}
+/* progression tree: a fixed dark "space" world regardless of theme */
+.tree{position:relative;display:grid;grid-template-columns:minmax(0,1fr) var(--sidew,360px);gap:0;overflow:hidden;background:#07080c;height:calc(100vh - var(--top,62px));margin:-20px -20px 20px;border-bottom:1px solid var(--line)}
+.tree:fullscreen{height:100vh;margin:0}
+body.home main{max-width:none}
+body.home .hero,body.home .next{max-width:1400px;margin-left:auto;margin-right:auto}
+@media (max-width:1000px){.tree{grid-template-columns:1fr;grid-template-rows:minmax(420px,70vh) auto;height:auto}.tree-side{height:auto}}
+.tree-stage{position:relative;min-height:420px;height:100%;touch-action:none;cursor:grab;user-select:none}
+.tree-stage.drag{cursor:grabbing}
+.tree-stage svg{display:block;width:100%;height:100%}
+.tree-tools{position:absolute;top:10px;left:10px;display:flex;flex-wrap:wrap;gap:6px;z-index:2}
+.tree-tools button,.tree-tools label{font:600 12px var(--font-display);background:rgba(20,22,30,.85);color:#e9e4d8;border:1px solid #3a3f4c;border-radius:5px;padding:5px 9px;cursor:pointer;display:flex;gap:5px;align-items:center}
+.tree-legend{position:absolute;bottom:10px;left:10px;display:flex;flex-wrap:wrap;gap:6px 14px;z-index:2;font:500 11px var(--font-mono);color:#cfcabd;background:rgba(10,11,16,.8);border:1px solid #2c303b;border-radius:5px;padding:6px 10px;max-width:calc(100% - 20px)}
+.tree-legend span{display:flex;align-items:center;gap:5px}
+.tree-legend i{width:12px;height:12px;border-radius:50%;display:inline-block;border:2px solid}
+.tree-credit{position:absolute;bottom:12px;right:12px;font:500 10px var(--font-mono);color:#7d7a72;z-index:2;text-align:right;max-width:260px}
+.tree-side{background:var(--panel);border-left:1px solid var(--line);padding:16px;overflow:auto;height:100%}
+@media (max-width:1000px){.tree-side{border-left:0;border-top:1px solid var(--line);max-height:none}}
+.tree-side h2{font-size:22px;margin:2px 0 6px}
+.tree-side .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.tree-side h3{font:500 11px var(--font-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 6px}
+.tree-side .way{border-top:1px solid var(--line);padding:7px 0;font-size:13.5px}
+.tree-side .way:first-of-type{border-top:0}
+.tree-side .way b{font-family:var(--font-display)}
+.tree-side .tip{font-size:13.5px;margin:0;padding-left:18px}
+.tree-side .tip li{margin:3px 0}
+svg .node{cursor:pointer}
+svg .node text{font:700 21px "Chakra Petch",system-ui,sans-serif;paint-order:stroke;stroke:#07080c;stroke-width:4px;stroke-linejoin:round}
+svg .node .ring{fill:none;stroke-width:4}
+svg .node.locked image{opacity:.38;filter:grayscale(1)}
+svg .node.reach .ring{stroke:#f0a23a;stroke-dasharray:6 4}
+svg .node.unl .ring{stroke:#5cc28a}
+svg .node.vis .ring{stroke:#f0a23a}
+svg .node.locked .ring{stroke:#3a3f4a}
+svg .node .halo{fill:none;stroke:#fff;stroke-width:2;opacity:0}
+svg .node.sel .halo{opacity:1}
+svg .node:hover .halo,svg .node:focus .halo{opacity:.7}
+svg .node:focus{outline:none}
+svg .edge{fill:none;stroke-width:3;opacity:.9}
+svg .edge.dim{opacity:.32}
+svg .edge.alt{stroke-width:1.6;stroke-dasharray:4 5;opacity:.55}
+svg .edge.hl{opacity:1;stroke-width:4}
+svg .edge.special{stroke-dasharray:3 7;stroke-linecap:round}
+@media (prefers-reduced-motion: no-preference){svg .node.reach .ring{animation:dash 1.2s linear infinite}}
+@keyframes dash{to{stroke-dashoffset:-20}}
+
+
+.wsec{margin:2px 0 8px}
+.wsh{font:600 11px var(--font-mono);text-transform:uppercase;letter-spacing:.08em;padding:3px 0;margin-bottom:2px;border-bottom:2px solid}
+.wsh span{opacity:.7}
+.wsh.g{color:var(--ok);border-color:var(--ok)}
+.wsh.r{color:var(--warn);border-color:var(--warn)}
+h3.nh{font:600 13px var(--font-mono);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px}
+h3.nh.g{color:var(--ok)} h3.nh.r{color:var(--warn)}
+.gh{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+.gh.compact{grid-template-columns:1fr;gap:8px;margin-top:8px}
+.gh .callout,.gh .hazbox{margin:0}
+.hazbox{border:1px solid var(--bad);border-left:4px solid var(--bad);background:color-mix(in srgb,var(--bad) 8%,var(--panel));border-radius:var(--radius);padding:10px 12px}
+.hazbox h2,.hazbox h3,.gh .callout h2,.gh .callout h3{font-size:16px;margin:0 0 4px}
+.hazbox h2,.hazbox h3{color:var(--bad)}
+.gh.compact h3{font:600 12px var(--font-mono)!important;text-transform:uppercase;letter-spacing:.08em}
+.hazbox ul,.gh .callout ul{margin:0;padding-left:18px}
+.hazbox li,.gh .callout li{margin:2px 0;font-size:14px}
+.gh.compact li{font-size:13px}
+.itemlink{font:inherit;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;text-align:left;text-decoration:underline dotted;text-underline-offset:3px}
+.itemlink.info{font:700 11px var(--font-mono);text-decoration:none;border:1px solid var(--accent);border-radius:50%;width:17px;height:17px;display:inline-grid;place-items:center;vertical-align:middle}
+.pop{position:fixed;z-index:60;background:var(--panel);border:1px solid var(--accent);border-radius:var(--radius);box-shadow:0 10px 30px rgba(0,0,0,.35);padding:10px 12px;font-size:14px}
+.pop[hidden]{display:none}
+.pop b{font:700 17px var(--font-display);display:block;margin:2px 0 4px;padding-right:20px}
+.pop p{margin:0 0 6px}
+.pop .pclose{position:absolute;top:4px;right:6px;border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer}
+.pop .plinks{display:flex;gap:12px;font-size:13px;margin-top:6px}
+table.items td{vertical-align:top;font-size:13.5px}
+table.items td.ithumb{width:44px;padding:4px 6px}
+table.items td.ithumb img{width:36px;height:36px;object-fit:contain;display:block;border-radius:4px;background:var(--bg)}
+.pop .pimg{float:right;width:56px;height:56px;object-fit:contain;margin:14px 0 4px 8px;border-radius:4px;background:var(--bg)}
+table.items tr.grp th{background:var(--bg);color:var(--accent);cursor:default;position:static}
+/* tighter spacing */
+body{line-height:1.45}
+main{padding:12px 14px}
+.top-in{padding:7px 14px;gap:8px 14px}
+.panel{padding:12px}
+.grid{gap:10px}
+.hero{gap:10px!important;margin-bottom:10px!important}
+.next-list{gap:6px}
+.next-item{padding:7px 10px}
+.next-item p{margin:2px 0}
+.dossier{gap:12px}
+.rail{gap:10px;top:62px}
+.content{gap:10px}
+.callout{padding:10px 12px}
+.wiki{padding:12px 14px}
+.wiki section + section{margin-top:14px}
+.wiki h2.sec{font-size:19px;margin:0 0 6px;padding-bottom:4px}
+.wiki h3.sec{margin:12px 0 4px}
+.wiki h4.sec{margin:10px 0 4px}
+.wiki p{margin:4px 0}
+.wiki details{margin:6px 0}
+.mapbox{padding:10px}
+.filters{margin:0 0 8px}
+.cards,.bcards{gap:10px}
+.tree{margin:-12px -14px 10px!important}
+.foot{margin:6px auto 16px}
+.reach .how{gap:4px}
+.reach .row{padding-top:5px}
+.tree-side{padding:12px}
+.tree-side h3{margin:10px 0 4px}
+
+
+/* home = map only, exactly one screen */
+body.home{overflow:hidden}
+body.home main{padding:0}
+body.home .foot{display:none}
+body.home .tree{margin:0!important;height:calc(100vh - var(--top,52px));border-bottom:0}
+.picks{display:grid;gap:4px;margin-top:4px}
+.pick{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:600 14px var(--font-display);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius);padding:5px 8px;cursor:pointer}
+.pick:hover{border-color:var(--accent)}
+.pick small{margin-left:auto;font:500 12px var(--font-mono);color:var(--muted)}
+.tree-resize{position:absolute;top:0;bottom:0;right:var(--sidew,360px);width:10px;margin-right:-5px;cursor:col-resize;z-index:5;touch-action:none}
+.tree-resize::after{content:"";position:absolute;top:50%;left:3px;width:4px;height:48px;margin-top:-24px;border-radius:2px;background:#4a505c;opacity:.8}
+.tree-resize:hover::after,.tree-resize:focus::after,.tree-resize.on::after{background:var(--accent);opacity:1}
+@media (max-width:1000px){.tree-resize{display:none}.tree{grid-template-columns:1fr}}
+.tsum{font:600 12px var(--font-display);background:rgba(240,162,58,.18);color:#f3c27a;border:1px solid #6b4a1c;border-radius:5px;padding:5px 9px;text-decoration:none}
+.tsum:hover{background:rgba(240,162,58,.3)}
+@media (max-width:1000px){body.home{overflow:auto}body.home .tree{height:auto}}
+
+
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="#home"><b>Wesley's Moons</b><span>Field guide</span></a>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#home" data-tab="home">Map</a>
+      <a href="#progress" data-tab="progress">Progress</a>
+      <a href="#moons" data-tab="moons">Moons</a>
+      <a href="#interiors" data-tab="interiors">Interiors</a>
+      <a href="#entities" data-tab="entities">Entities</a>
+      <a href="#item-uses" data-tab="item-uses">Items</a>
+      <a href="#guides" data-tab="guides">Guides</a>
+      <a href="#field-notes" data-tab="field-notes">Field notes</a>
+    </nav>
+    <div class="search">
+      <input id="q" type="search" placeholder="Search moons, items, enemies…" autocomplete="off" aria-label="Search the guide">
+      <div class="results" id="results" role="listbox"></div>
+    </div>
+    <div class="sync" id="sync" title="Where your progress is saved"><i></i><span>Saved on this device</span></div>
+  </div>
+</header>
+
+<main>
+  <div class="loading" id="loading">Loading the guide…</div>
+  <section class="view" id="v-home"></section>
+  <section class="view" id="v-progress"></section>
+  <section class="view" id="v-moons"></section>
+  <section class="view" id="v-list"></section>
+  <section class="view" id="v-notes"></section>
+  <section class="view" id="v-page"></section>
+  <section class="view" id="v-items"></section>
+</main>
+<p class="foot">Unofficial fan guide. Moon pages, item tables, maps and screenshots come from the <a href="https://wesleysmoons.wiki.gg/" target="_blank" rel="noopener">Wesley's Moons Wiki</a> (CC BY-SA 4.0) and vanilla stats from the <a href="https://lethal.miraheze.org/" target="_blank" rel="noopener">Lethal Company Wiki</a>. "Est. loot" is a rough estimate: average scrap count × spawn-weighted average item value.</p>
+
+<div class="pop" id="pop" role="dialog" aria-label="Item details" hidden></div>
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Image viewer">
+  <button class="btn" id="lbclose">Close</button>
+  <img id="lbimg" alt="">
+  <p id="lbcap"></p>
+</div>
+
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- crew quick guides (written for this group) ---------- */
+const TIPS = {
+ "Galetry": {
+  g: ["Your hub: free, no enemies, nothing to loot.",
+   "Log translator: immediately left inside the museum. Projector for videotapes: go left, climb the ladder on the right, then the stairs on the right.",
+   "Sell desk: right side inside the museum. Put scrap on the counter just right of the entrance and press the button to send it over.",
+   "Gift shop: small building right (north) of the ship. Failsafe and Quickstart floppy disks are under the counter on the right (Failsafe needs mod v7.0.0+).",
+   "Hidden backstage: interact with the Hoarding Bug bust the flashlight points at. Step off the stairs before they move. The three special apparatus slots are back there.",
+   "Fabricator: behind the locked door in the fire exit, left of the ship. Needs a Fabricated key crafted on Gratar."],
+  h: ["Moving backstage stairs can kill you."]
+ },
+ "Asteroid-13": {
+  g: ["Free, hazard B. Flip the exterior power switch first so the whole moon is lit; flip it again if the power drops.",
+   "Follow the red flares outside to Geoffrey's final message (always spawns) and translate it to unlock Junic.",
+   "Coil-Heads: one player keeps looking at them while the others move. Travel in pairs, never turn your back, and use a stun grenade, zap gun or radar booster to escape.",
+   "The clock is hidden: have someone count time and head back earlier than feels necessary.",
+   "Grab the log before anyone pulls the Apparatus: pulling it kills the power switch.",
+   "Skip Eclipsed days. Sell BIO-HXNV7 (128–200). Asten Lab interior can have BIO samples worth up to ~490. Recovered secret log unlocks Cosmocos (very dangerous, for later)."],
+  h: ["Coil-Heads inside and outside: unkillable, 90 damage every 0.2 s on contact.",
+   "Clock hidden on this moon.", "Power switch randomly turns off; dead during Eclipse or after the Apparatus is pulled.",
+   "Eclipsed: no lights and 8 enemies spawn at landing.", "Interior is always foggy."]
+ },
+ "Junic": {
+  g: ["Free, hazard C. Good farm moon; interior is almost always the Atlantean Citadel.",
+   "Flares on the left of the ship lead to Geoffrey's log 4 (unlocks Etern). The note on a tent wall unlocks Chasm.",
+   "Walk around rose patches and look down while carrying loot. If a path is blocked by a fallen tree or rock, take another route.",
+   "Inside: grab both Dungeon keys for the two Beholder's Eyes (180 each). Before taking the first Eye, send everyone outside or to the Great Hall's 3rd floor; the second Eye is safe.",
+   "Pull the lever at the entrance to raise the Vault, solve its puzzle (Roman-numeral basins, 5-button fountains or observatory stars), then pull the Vault's own lever. Earlier in the day = better crown (160–588).",
+   "Jump over axe pressure plates. In eye-trap rooms, stay out of the eye's view or run through.",
+   "Only enter the ritual circle while holding Jack's skull (unlocks Roart)."],
+  h: ["Carnivorous roses: small 22 damage, large 90 damage (they trap you).",
+   "Falling rocks and trees block paths at set times.", "Ritual circle by the fire exit: instant death without Jack's skull.",
+   "Interior floods for ~2 minutes when the first Beholder's Eye is taken.",
+   "Axe traps 100 damage. Eye traps fire spikes for 33 damage.", "Jetpacking up the Sunroof: 666 damage."]
+ },
+ "Infernis": {
+  g: ["280 credits, hazard B+. Mostly an unlock moon: loot is heavy and cheap.",
+   "Atlantica: straight behind the ship, right at the first crystal, follow the path to a map on the ground between three crystals. Interact with it and wait for the voice to finish.",
+   "Acidir: follow the floodlights south to a camp and translate Cunningham's travel log 1.",
+   "Main entrance: path behind-left (south) of the ship, on the right. Use the easy fire exit straight from the main entrance past the floodlight.",
+   "Stay off lava edges and pits, don't sprint jumps with heavy loot, and watch for falling volcanic rock.",
+   "Inside, look up for Snare Fleas and walk slowly to spot webs. Be on board before take-off: lava floods everything."],
+  h: ["Lava: 10 damage per hit (20 in pits), works like quicksand.", "Volcano drops molten rock on the exterior; dust reduces vision inside.",
+   "Lava covers the surface when the ship leaves.", "Bugs inside: Bunker Spiders, Hoarding Bugs, Snare Fleas, Circuit Bees, Honey Stingers."]
+ },
+ "Motra": {
+  g: ["15 credits, hazard B. Cheap and fairly safe.",
+   "Turn off the mortars first: lever behind the ship, up the path on the right above the fire exit, then left at the next intersection.",
+   "Brackens: glance at them, then back off; don't stare. Masked: check that teammates are actually talking before trusting them.",
+   "Radio message 1 on the exterior unlocks Fission-C and Oldred.",
+   "Inside drops worth grabbing: Secret files (Alcatras), Teach the disloyal tape (Crowd), Filitrios tape, Floppy disk (Dreck)."],
+  h: ["Mortars target players outside (4 shots at once when Eclipsed).", "Brackens (50% of indoor spawns) and Masked.", "Eyeless Dogs outside."]
+ },
+ "Atlantica": {
+  g: ["130 credits, hazard B. Usually Atlantean Citadel, so Beholder's Eyes and a Vault puzzle like Junic.",
+   "Loot before 10:00 and between 12:30 and 4:30; be outside or up high during the floods.",
+   "Leave through a fire exit late in the day once the main entrance has sunk.",
+   "Lecaro: go left of the ship to a fire exit with a bridge on its right, push the bridge down, and interact with the map on the ground."],
+  h: ["Interior floods twice a day: ~10:00–12:30 and ~4:30–7:00.", "Main entrance sinks from 4:30 PM (only a jetpack gets you out that way).",
+   "Atlantean Citadel traps: axe plates, eye traps.", "Spore Lizards, Hoarding Bugs, Slimes, Thumpers inside."]
+ },
+ "Lecaro": {
+  g: ["630 credits, hazard A+. Best loot for the price (~50–60 scrap).",
+   "Grab the shovel that always spawns behind the ship and break the stalagmite blocking the path (a pickaxe one-shots them).",
+   "Keep shovels and knives away from gunpowder barrels.",
+   "Ride the minecart right of the main entrance to carry loot; never try to jump the gap in the tracks.",
+   "Thalasso: after the stalagmite keep right past the lava river; just before the fire exit there's a small opening on the left with the map. Step away right after the cutscene."],
+  h: ["Gunpowder barrels: outside they explode when hit, inside they get lit and blow up.", "Geyser in the minecart track gap: instant death.",
+   "Falling rocks outside when you walk underneath.", "Stalactites inside.", "Rock falls on the Thalasso map after its cutscene.",
+   "Bunker Spiders, Slimes, Brackens, Nutcrackers inside; Eyeless Dogs outside."]
+ },
+ "Thalasso": {
+  g: ["350 credits, hazard B++. Atlantean Citadel inside.",
+   "Left temple path: stand on the pillars between pushing walls. Right path: wait in the gaps between the spiked walls.",
+   "Crushers: stop in the safe spot between each one.",
+   "Utril: left from the front of the ship, left again, straight on to the drowning chamber. When it floods, jump on the pillars or duck into the fire exit; once it drains, crouch into the hole at the bottom.",
+   "Placing a Beholder's Eye on the Heart Chamber pedestal opens a room with seven Human hearts."],
+  h: ["Pushing walls into a death pit; spiked crushing walls.", "Crushers near a fire exit.", "Drowning chamber fills when someone is at the bottom.",
+   "Fish enemies and Slimes; Eyeless Dogs outside."]
+ },
+ "Utril": {
+  g: ["180 credits, hazard B+. One of the easier moons.",
+   "Keep Harrington's research 4 if you find it: it's the destiny item for Ending 4.",
+   "Heal up before going under acid tanks, or send the healthiest player.",
+   "Cubatres: fire exit beside the test tubes, follow the path down, opening on the right.",
+   "Leave the two marked trees alone unless everyone is clear of the main entrance. Don't use the altar."],
+  h: ["Acid tanks spray when an injured player walks under (5 damage per hit), and leave a puddle for ~70 s.",
+   "Hitting both marked trees drops a platform on the main entrance.", "Bunker Spiders and Spore Lizards."]
+ },
+ "Fission-C": {
+  g: ["600 credits, hazard A, ~33–39 scrap.",
+   "Bring weed killer. Leave rooms when \"air filter overwhelmed\" shows, and spray infected teammates before they reach 100%.",
+   "Close radioactive barrels by interacting with them (costs a little HP), or route around them.",
+   "Do outdoor trips early: toxic waste rises during the day.", "Don't use the altar."],
+  h: ["Cadaver Growth is a dominant indoor threat.", "Toxic waste outside: 12 damage per hit, rises over the day.",
+   "Radioactive barrels inside: 1 damage per hit nearby.", "Nutcrackers, Butlers, Masked, Coil-Heads inside; Jesters and Eyeless Dogs outside."]
+ },
+ "Oldred": {
+  g: ["720 credits, hazard S+. Go for Radio message 2 on the exterior (unlocks Trite) and oil barrels for Repress.",
+   "When a hanging mine's beeping speeds up, leave the area at once; walls don't protect you.",
+   "Time catwalk crossings between geyser bursts.",
+   "Graffiti 'WHERE IS DUCKSTROID-14?' unlocks Duckstroid-14."],
+  h: ["Hanging mines: 10 damage on contact; their explosion goes through walls and can one-shot.", "Boiling oil geysers on catwalks: 3 damage per hit.",
+   "Old Birds, Baboon Hawks and Coil-Heads outside.", "Backoiler Spillfish, Slimes, Spore Lizards, Thumpers inside."]
+ },
+ "MorvDonalds": {
+  g: ["500 credits, hazard A+, unlocked by default. 97% of scrap is Mrov Sauce (~101 each, 7 lb): best quick money.",
+   "Bring a shovel for Hoarding Bugs (2 hits). Stick together in the big interior.",
+   "Be back before evening."],
+  h: ["Hoarding Bugs and Masked inside.", "Eyeless Dogs, Forest Keepers, Circuit Bees outside.", "Large interior: easy to get lost."]
+ },
+ "Repress": {
+  g: ["1250 credits, hazard S+. Every ending happens here. Time runs slower (0.75x).",
+   "Bring an Apparatus, 2 oil barrels, an Untampered operating panel and a destiny item, all in one visit.",
+   "Steps: apparatus in the slot left of the main entrance → 2 barrels beside the ship → keypad, top lever, bottom lever, top lever → run to the ship, panel on its terminal, destiny item in the slot left of it.",
+   "At least one Gratar videotape spawns inside."],
+  h: ["Progress on the abandoned ship resets when you leave orbit.", "Nutcrackers, Barbers, Slimes inside; Eyeless Dogs outside."]
+ },
+ "Gloom": {
+  g: ["220 credits, hazard B. Good cheap money.",
+   "Track time yourself (clock hidden). Stay close in the fog.",
+   "Detonator (SW of the ship, follow the lanterns) opens two fire exits but caves in the main entrance; only press it once everyone is out.",
+   "Chainsaws spawn here (weapon, sells ~82). Don't use the altar."],
+  h: ["Fog inside and out.", "Clock hidden.", "Detonator collapses the main entrance cave.", "Maneater, Bunker Spiders, Brackens, Spore Lizards."]
+ },
+ "Atlantean Citadel": {
+  g: ["Two Beholder's Eyes (180 each) behind doors that need Dungeon keys; two keys always spawn.",
+   "Before taking the first Eye, move everyone outside, to the Great Hall's 3rd floor, the Grates or the Sunroof stairs.",
+   "Pull the lever in the entrance area to raise the Vault; its lit symbols show the puzzle. After solving it, pull the Vault's own lever.",
+   "5-button fountains: press one button; if it stays down it's next, if all reset try another. Each fountain has its own order.",
+   "Lost in the Great Hall? It always connects to the main entrance: check all three floors and the crouch tunnels."],
+  h: ["Floods for ~2 minutes after the first Beholder's Eye is taken.", "Axe pressure plates: 100 damage.", "Eye traps: 33 damage spikes if it sees you.", "Jetpacking up the Sunroof: 666 damage."]
+ }
+};
+
+Object.assign(TIPS, {
+ "Acidir": {g: ["580 credits, hazard S, ~33–38 scrap. Interior is the Art Gallery or Spooky Manor.",
+   "Polarus: translate Cunningham's travel log 3 on the exterior.",
+   "Stay out of the acid pools: walk around them and don't jump across with heavy loot.",
+   "Inside: Butlers (stay in pairs, don't let one get you alone), Thumpers (break line of sight around corners). Forest Keepers outside: go back before evening.",
+   "Random drops inside: Gloom, Gratar and Junic tapes."],
+  h: ["Acid pools damage you fast; falling in deep is instant death.", "Butlers, Thumpers, Hoarding Bugs, Spore Lizards inside; Forest Keepers outside."]},
+ "Alcatras": {g: ["400 credits, hazard A. Island prison; usually Rubber Rooms inside.",
+   "Find and flip the mortar switches around the island before crossing open ground.",
+   "Best moon for random tapes: Acidir, Atlantica, Gloom and Junic tapes plus the Floppy disk (Dreck) can drop inside.",
+   "Outside: Forest Keepers, Baboon Hawks and Giant Sapsuckers: stay together and head in before evening."],
+  h: ["Mortars fire bursts of explosive shells at players outside.", "Bunker Spiders, Hoarding Bugs, Aquafish, Snare Fleas inside."]},
+ "Berunah": {g: ["120 credits, hazard C. Time runs slower (0.75x).",
+   "Wait for the sandstorm after landing to pass: it uncovers the ruins and a stairway in front of the main entrance.",
+   "Ending 3 route: go down the stairway, interact with the statue on the left, then place the Crystal cube (from Cubatres) in the hole the statue's light points at. Take all five Brooding seeds from the hidden chamber.",
+   "Place the seeds on the altars of Etern, Filitrios, Fission-C, Gloom and Utril (this makes those moons much harder), return here, take the Chunk of Overseer, pull the lever the statue looks at near the main entrance and insert the chunk. The Stone of purification spawns behind the ship."],
+  h: ["Placing Brooding seeds permanently adds tentacles and Assimilated Growth to five moons once all are placed.", "Bunker Spiders, Snare Fleas, Spore Lizards, Brackens inside; Eyeless Dogs outside."]},
+ "Calist": {g: ["Free, hazard B+. Has the Royal Apparatus (one of three needed for Hyx).",
+   "Royal Apparatus: take the lone fire exit inside down to the area below the exterior and jump across moving rocks (doable with base stamina under ~100 lb, or use a jetpack).",
+   "Taking it wakes all Old Birds: grab it last and get straight back to the ship.",
+   "A falling building forms a bridge to a fire exit behind the ship around 2:00 PM.",
+   "Random drop: Teach the disloyal tape (Crowd)."],
+  h: ["Buildings fall all day; ceilings inside collapse with rubble that hurts you.", "Old Birds outside activate when the Royal Apparatus is taken.", "Bunker Spiders, Slimes, Nutcrackers inside."]},
+ "Carnate": {g: ["1600 credits, hazard S+. Day runs slower (0.85x). Usually the Carnival interior.",
+   "Destiny item: the two-handed Mycete case spawns as random scrap inside (3% chance per item) and gives Ending \"Cog in a grinder\" on Repress.",
+   "Inside: watch Smiles and Hoarding Bugs. Outside: bees, Forest Keepers, dogs: keep trips short."],
+  h: ["Carnival traps inside (boxing gloves, hammerbots, pits).", "Circuit Bees, Forest Keepers, Eyeless Dogs outside."]},
+ "Centrus": {g: ["715 credits, hazard A.", "Coil-Heads inside and out: one player watches them while others move.",
+   "A breakable hive near the north fire exit can hold the Hyve videotape.",
+   "Leave Filitrios's altar empty or Centrus also gets tentacles and Assimilated Growth."],
+  h: ["Coil-Heads inside and outside; Butlers and Bunker Spiders inside; Eyeless Dogs outside."]},
+ "Chasm": {g: ["220 credits, hazard S+ (mostly because of Sinkmaws).", "Watch the ground for Sinkmaw openings and walk around them. Bring a teleporter or an extension ladder in case someone falls in.",
+   "Spine: craft a Blank floppy disc on Galetry and insert it into the floppy disc machine outside.",
+   "Random drops: Gloom tape inside; a hive outside can hold the Hyve tape."],
+  h: ["Sinkmaw: falling in shuts you inside and fills it with acid (10 damage per hit, ~200 total). Only a teleport gets you out.", "Hoarding Bugs, Brackens, Gunkfish, Bunker Spiders inside; Baboon Hawks outside."]},
+ "Core": {g: ["900 credits, hazard A. Strong loot (~32–38 scrap).", "Faith: at least one \"My task 4\" spawns inside. Translate it.",
+   "Step away from small volcanoes when they puff grey smoke: they're about to erupt.", "Stay off the smoky low ground."],
+  h: ["Small volcanoes: 18 damage per hit standing in them; eruptions throw exploding rocks (18 damage).", "Low ground is covered in smoke: 10 damage per hit.", "Hotfish, Thumpers, Butlers, Coil-Heads inside."]},
+ "Cosmocos": {g: ["2300 credits, hazard ???. Clock hidden but time runs at half speed (0.5x), so you get a long day.",
+   "Cosmic Apparatus (for Hyx): take the lone fire exit inside to a closed-off area full of Watchers. No jetpack in or out. Move when Watchers look away.",
+   "Taking it angers all Watchers and triggers apparatus events in the interior (e.g. Greenhouse flamethrowers, Grand Armory lockdown). Plan your exit first.",
+   "Unlocks: Donnahue's note outside → Glimmer. Random drops: Gratar and Utril tapes, Cunningham's visit."],
+  h: ["Watchers hurt you while you're in their gaze.", "Cosmic Brackens inside and out; Bunker Spiders, Snare Fleas, Barbers inside."]},
+ "Crowd": {g: ["120 credits, hazard B. Start of the trial chain (Endings 5 and 6). Interior is the Spooky Manor.",
+   "Trial \"Teach the disloyal\" (≥400 in rewards + the ticket): switch the channel on three radios inside → in the pool room with the employee, press the red button and take the gas canister that appears → fuel the generator next to the car in the garage → press the red button again. Rewards spawn under the employee.",
+   "Random drop: Medicate the unwell tape (Narcotic)."],
+  h: ["Bunker Spiders, Hoarding Bugs, Slimes, Gunkfish inside; Eyeless Dogs and Giant Sapsuckers outside."]},
+ "Cubatres": {g: ["1500 credits, hazard S+.", "Crystal cube (needed for Berunah): from the front of the ship hug the left wall to a cube, then hug the right wall to the petrified creatures around it. A fire exit is there.",
+   "Outside cubes wake at 11:00 AM (right) and 4:00 PM (left) and pulse lethal energy while moving: get in before 11:00 or track their position.",
+   "Inside, some cubes pulse on a timer: time your passage between pulses."],
+  h: ["Exterior cubes pulse 40 damage per hit (usually fatal).", "Interior cubes pulse 10 damage per hit.", "Maneater, Barber, Nutcracker inside; Sapsuckers, Baboon Hawks, Forest Keepers, dogs outside."]},
+ "Demetrica": {g: ["1200 credits, hazard \"Safe\", but interior power is extreme (69): expect many enemies.",
+   "Bloody Apparatus (for Hyx): room directly behind the ship, on a raised platform. Bring a jetpack or extension ladder.",
+   "Entering traps you with two moving skull walls. Go to the door on the far side and flip switches on the panel (each flips its neighbors) until all are down and green.",
+   "If nobody escapes through that door, the room locks for the day. Random drop: Secret files (Alcatras)."],
+  h: ["Skull walls sweep the apparatus room for the rest of the day.", "Cadaver Growth, Coil-Heads, Corpse Crawlers, Hoarding Bugs inside; Coil-Heads outside."]},
+ "Descent": {g: ["520 credits, hazard A. Expanded Mineshaft trial (Endings 5/6).",
+   "Trial \"Incinerate the lies\" (≥400 + ticket): find the employee's room near the main elevator → shred 8 false articles from small shelves → press the red button and memorize the 3 symbols → in the pipe room, turn the 3 valves with those symbols (a wrong valve explodes after a delay: run) → press the red button again and turn the red valve. Rewards appear behind the door.",
+   "Random drop: Grind the deluded tape (Extort)."],
+  h: ["Wrong valve in the trial explodes.", "Bunker Spiders, Slimes, Brackens inside; Earth Leviathan, Baboon Hawks, dogs outside."]},
+ "Desolation": {g: ["510 credits, hazard A+.", "Push dead trees over to make bridges.",
+   "Giant watchers rise during the day: stay out of their red light (it hits through cover).",
+   "Inside, mounds of cosmic growth drop through ceilings and floors: don't stand under them, and find another route if a door gets blocked.",
+   "Random drop: Utril tape."],
+  h: ["Giant watcher gaze: 9 damage per hit, even behind objects.", "Falling growth mounds can trap and suffocate you.", "Bunker Spiders, Thumpers, Nutcrackers inside; Eyeless Dogs outside."]},
+ "Dormant": {g: ["360 credits, hazard A+.", "Mines outside: every detonation destabilizes the bomb. After five, everyone dies. Walk carefully.",
+   "Xenphir: the lone interior fire exit leads to a mined, overgrown area with a floppy disc machine. Use a jetpack or TZP to cross. Insert a Blank floppy disc."],
+  h: ["Exterior mines: 30 damage or instant death; 5 detonations blow up the whole moon.", "The roof above the mined area deals 999 damage.", "Brackens, Slimes, Spore Lizards, Bunker Spiders inside; dogs and bees outside."]},
+ "Dreck": {g: ["200 credits, hazard B+. Interior is the Expanded Mineshaft.", "Core: at least one \"Pedro's note 3\" spawns inside. Translate it.",
+   "Move quickly through exterior tunnels and never stop inside them.", "Inside, watch pipes for gas: wait for the flame to pass."],
+  h: ["Tunnels outside can collapse and crush you; they stay closed for the day.", "Gas leaks ignite: 12 damage per hit.", "Slimes, Bunker Spiders, Snare Fleas, Hoarding Bugs inside; Forest Keepers outside."]},
+ "Duckstroid-14": {g: ["1271 credits, hazard Quack. Joke moon with 2–100 scrap.",
+   "The Duck always knows where you are and can't be killed: stay away from its middle. It can't open doors, so close them behind you.",
+   "Baducks are weak (2 HP): shovel them.", "Never use the lone fire exit: it drops you into space."],
+  h: ["Duck: instant death on touching its middle; invulnerable.", "Lone fire exit kills you.", "Baducks inside and out."]},
+ "Dune": {g: ["550 credits, hazard B.", "Earth Leviathans outside: keep moving and don't stand still on sand.", "Inside: Masked (verify teammates), Bunker Spiders, lizards."],
+  h: ["Earth Leviathans and Eyeless Dogs outside.", "Masked, Bunker Spiders, Spore Lizards, Gunkfish inside."]},
+ "Empra": {g: ["2500 credits, hazard S++++. Time runs at half speed (0.5x).",
+   "Gilded Jester inside: when it starts cranking, everyone leaves immediately.",
+   "Ending 2: put an Apparatus in the center of the cart and the Huge Harold (always spawns inside) on its front → ride the cart to the plaza → aim the mortar near the main entrance at the seed → go through the lone interior fire exit (or jetpack) to the control panel and fire → use the panel again to raise the tracks → ride the cart back to the ship, pull the lever and jump off. The Chunk of harold spawns behind the ship.",
+   "Make sure everyone else is back on the ship before firing."],
+  h: ["Gilded Jester: roams faster, cranks very quickly, instant kill.", "After firing the mortar, tendrils cover the exterior and kill on touch.", "Eyeless Dogs outside."]},
+ "End": {g: ["Credits moon unlocked by any ending (except Ending 1). Time doesn't pass.",
+   "Right hallway (facing away from the ship's back): five buttons spawn fight waves with free shovels and shotguns. Good for farming weapons."],
+  h: ["Landing on Day 0 gets you fired when you leave orbit.", "The waves you spawn: Thumpers, Butlers, Nutcrackers, a Jester."]},
+ "Etern": {g: ["750 credits, hazard S+.", "Glace: translate Geoffrey's log 3 on the exterior. Dune: Blank floppy disc in the floppy machine outside.",
+   "A siren at 5:00 PM warns of a bomb at 6:00 PM. It doesn't hurt, but fog covers everything until ~10:00 PM: be done outside by 6.",
+   "Interior plays fake danger sounds (Nutcracker scans, Coil-Head springs): stay calm and check before reacting.", "Leave the altar alone."],
+  h: ["Bomb fog after 6:00 PM makes the exterior nearly blind.", "Snare Fleas, Slimes, Masked, Nutcrackers inside; Forest Keepers and Nutcrackers outside."]},
+ "Extort": {g: ["520 credits, hazard A+. Trial chain step 4.",
+   "Trial \"Grind the deluded\" (~378 + ticket): shed is straight and slightly right behind the ship past two hills. Take a gas canister to one of three listed grinder locations (map on the shed wall) → fuel the generator, collect the Gore bucket → put the gore in the shed machine. Repeat 3 times → crouch through the hole at the back of the shed into a flooded building (jump to avoid drowning) and get the blue key → press the red button and insert the key.",
+   "Random drop: Reshape the incapable tape (Release)."],
+  h: ["Drowning in the flooded building (jump to stay up).", "Butlers, Coil-Heads, Masked inside; bees, dogs, Feiopar, Forest Keepers outside."]},
+ "Facto": {g: ["333 credits, hazard B+. Croc-themed moon with croc scrap; needs the separate Facto/Decrepit Store download.",
+   "Enemies are vanilla (they just wear crocs).", "Decrepit Store: pulling the apparatus wakes a silent Coil-Head mannequin. Keep eyes on it."],
+  h: ["Thumpers, Slimes, Bunker Spiders inside; Eyeless Dogs outside.", "Apparatus pull spawns a silent Coil-Head variant."]},
+ "Faith": {g: ["410 credits, hazard B.", "Berunah: pull all six levers on the stone shrines along the dirt path; a hidden room opens in the giant rock far right behind the ship. Take \"My task 5\".",
+   "Don't interact with the mysterious object in that room unless you want an Assimilated Growth here.",
+   "Random drop: a hive near the shrine south of the ship can hold the Hyve tape."],
+  h: ["Mysterious object in the secret room spawns Assimilated Growth on future landings.", "Bunker Spiders, Hoarding Bugs, Snare Fleas inside; Earth Leviathan, Sapsuckers, dogs outside."]},
+ "Filitrios": {g: ["300 credits, hazard A. Usually the Toy Store.",
+   "Unlocks: computer in the radio station → Centrus; Radio message 4 outside → Demetrica.",
+   "Teddy bears with a blue right eye scan around when you're near: stay out of view or an Arachnohead spawns.",
+   "Random drops: Teach the disloyal tape (Crowd), Motra tape; a hive outside can hold the Hyve tape. Don't use the altar."],
+  h: ["Blue-eyed teddy bears spawn Arachnoheads if they see you.", "Smiles, Bunker Spiders, Ghost Girl, Nutcrackers inside; Nutcrackers and Masked outside."]},
+ "Glace": {g: ["780 credits, hazard A+.", "Elevator left (north) of the ship moves between the upper and lower levels.",
+   "Unlocks: Geoffrey's log 2 → Calist; Recovery order → Vindict. A hive near the west fire exit can hold the Hyve tape.",
+   "Ice Leviathans inside and out: keep moving."],
+  h: ["Ice Leviathans inside and outside.", "Bunker Spiders, Cryofish, Snare Fleas inside."]},
+ "Glimmer": {g: ["2100 credits, hazard S+. Clock hidden.", "Inside, Watchers sweep areas: move when they look away.",
+   "Pulling the apparatus makes all Watchers faster: do it last."],
+  h: ["Watchers: 4 damage per hit while in their gaze.", "Cosmic Brackens inside and out; Bunker Spiders, Snare Fleas inside."]},
+ "Gratar": {g: ["430 credits, hazard A. The fabricator moon.",
+   "Blue fire exit beside the main entrance leads to the fabricator: deposit ingredient items, craft Fabricated keys (for Galetry's door), health stims, operating panels and more.",
+   "Push the broken bridge left of the main entrance to ride it (and your loot) toward the ship once.",
+   "Use G.A.R.Y.'s voicelines inside as a clock (one every ~1–1.5 in-game hours). Leave before the 9:00 PM decontamination."],
+  h: ["Red lighting inside makes it hard to see.", "Spore Lizards, Thumpers, Aquafish, Slimes inside; Baboon Hawks and dogs outside."]},
+ "Heap": {g: ["Free, hazard D. Easy moon.", "Mines outside beep faster as you approach: back off and walk around them."],
+  h: ["Exterior mines: 30 damage or instant death near the blast.", "Hoarding Bugs, Bunker Spiders inside; Baboon Hawks outside."]},
+ "Hyve": {g: ["Free, hazard \"B.. for Bees\".", "Large hives outside break if you drive the Cruiser into them: more bees and hive scrap, but can spawn Honey Stingers and Old Birds.",
+   "Get past the pedestal hives inside before 6:00 PM.", "Random drop: Junic tape."],
+  h: ["Bee swarms around pedestal hives from 6:00 PM: 3 damage per hit.", "Honey Stingers, Bunker Spiders inside; Circuit Bees and Honey Stingers outside."]},
+ "Hyx": {g: ["3000 credits, end-game. Unlocked with all three special apparatus in Galetry.",
+   "Goal: find the Empra videotape inside (spawn weight 10, not guaranteed).",
+   "Walk forward from the ship along the ridge for the most direct route. Avoid running and jetpacking outside: it angers the Overseer.",
+   "Be back in the ship before late in the day: the crater in front of the ship isn't decorative.",
+   "Inside, everything builds Assimilation: avoid red X marks, tentacle rocks and dripping red substance. Assimilated Growth can't be removed."],
+  h: ["Colossal tentacles from red craters: 999 damage, even through cover (except the ship).", "Interior tendrils and tentacles: 15–20 damage and Assimilation build-up.",
+   "Reaching 100% Assimilation kills you and spawns an Assimilated Employee (28 HP, takes 1 damage per hit).", "Almost every vanilla enemy inside; Eyeless Dogs and Feiopar outside."]},
+ "Narcotic": {g: ["1500 credits, hazard S++. Trial chain step 2.",
+   "Trial \"Medicate the unwell\" (≥320 + ticket): in the warehouse behind the ship, take the gas canister and carefully trace the line from the machine to the right generator (wrong one explodes) and fuel it → follow yellow signs to the other warehouse (front-left of ship), take two acid canisters (hallucinations are harmless) → pour both into the machine.",
+   "Random drop: Incinerate the lies tape (Descent)."],
+  h: ["Wrong generator in the trial explodes.", "Bunker Spiders, Brackens, Gunkfish, Slimes inside; Baboon Hawks, Sapsuckers, dogs outside."]},
+ "Polarus": {g: ["650 credits, hazard A.", "Cosmocos: translate Cunningham's travel log 4 outside. Desolation: visit during an Eclipse and inspect the meteor that crashes around 5:00 PM.",
+   "An Ice Leviathan sweeps the two front-left fire exits about every 20 s: time your crossing.",
+   "Avoid lingering on the frozen lake with heavy loot, keep moving in icicle canyons, and don't use the icy-wall path to the front-right fire exits.",
+   "Random drops: Etern, Gratar, Motra, Oldred tapes; Cunningham's visit."],
+  h: ["Ice Leviathan path near the front-left fire exits: instant death.", "Lake ice breaks under weight or near Leviathans.", "Falling icicles in canyons: instant death.", "Icy walls close on the front-right path and crush you.", "Slimes, Nutcrackers, Spore Lizards, Butlers inside."]},
+ "Release": {g: ["1750 credits, hazard S. Day runs slower (0.7x). Final trial (Endings 5/6).",
+   "Trial \"Reshape the incapable\" (≥360 + ticket): note the door labeled RESHAPE THE INCAPABLE → find the employee in the machine → bring three Machine parts from the server rooms behind electrical gates (drop them by the gate, walk through, pick them up on the other side) → press the red button, take the gas can and fuel the BACKUP POWER generator → press the button again; when the buzzer sounds the labeled door opens.",
+   "Ending 5: turn on the TV in that room → Secret Coordinates. Ending 6: first insert all five trial tickets into the machine left of the TV, then turn it on → Very secret coordinates."],
+  h: ["Electrical gates: 99 damage if you walk through holding metal parts.", "Bunker Spiders, Hoarding Bugs, Slimes inside; Feiopar, Forest Keepers, Sapsuckers outside."]},
+ "ResearcherxB": {g: ["Unlocked by placing Triangulation devices on Vindict and six random moons before time runs out (it crashes into Trite otherwise).",
+   "Get Cavil's keycard (guaranteed inside) and open the door at the end of the left corridor: five guaranteed scrap. The terminal next to the left ship lever unlocks Carnate. Do this first.",
+   "Optional: behind the panel, cut only wires with a red light above them at the matching panels (wrong wire 100 damage), work the valves, then the left lever overloads the ship. Everyone must be aboard within 30 seconds. Permanent choice."],
+  h: ["Clock hidden.", "Wrong wire: 100 damage. Overload leaves anyone outside the ship behind.", "Coil-Heads outside; Bunker Spiders, Hoarding Bugs, Snare Fleas inside."]},
+ "Roart": {g: ["680 credits, hazard A. Elder (big Forest Keeper, 80 HP) outside during the day.",
+   "Trial \"Bury the child\" (Soul orb, 600–1000): bring four Human hearts (Galetry gift shop or Thalasso's Heart Chamber) → from the ship's back: right, left, far right, left onto the rose path to the green-lit altars → drop the hearts, jump into the blue light → follow the lights to the stone platform, carry Emma's body onto it → interact with the blade three times while dodging apparitions → take her head and bury it where the platform map marks the shovel.",
+   "Walk around rose patches."],
+  h: ["Roses: small 22, large 90 damage.", "Trial fog: 1 damage per hit; apparitions: 49 damage.", "Elder, Baboon Hawks, Feiopar outside; Slimes, lizards, Barbers, Coil-Heads, Brackens inside."]},
+ "Selector": {g: ["1400 credits, hazard A. Usually the Grand Armory.",
+   "Cache northeast of the ship: Recovery order (→ Vindict) plus crafting materials and maybe a Triangulation device. Contents reroll each landing until someone gets close, so leave and re-land for a better roll.",
+   "Dormant: Blank floppy disc in the floppy machine outside."],
+  h: ["Grand Armory lockdown if the apparatus is pulled (falling spiked ceiling).", "Brackens, Hoarding Bugs, lizards, Bunker Spiders inside; Forest Keepers, bees, Sapsuckers, dogs outside."]},
+ "Spine": {g: ["660 credits, hazard A. No special mechanics; highest chance of the Greenhouse interior."],
+  h: ["Hoarding Bugs, Bunker Spiders, Slimes, Snare Fleas inside; bees, Forest Keepers, Honey Stingers outside."]},
+ "Trite": {g: ["850 credits, hazard S+. Lots of scrap (43–58).",
+   "Unlocks: Radio message 3 → Filitrios; Recovery order → Vindict; Blank floppy disc in the machine → Heap.",
+   "Scanners on poles drop a red search light: stay out of it or nearby turrets switch on for the day. One turret in the alley behind the ship is active from landing.",
+   "Inside, if a Lone listener starts tracking you while alone, freeze and stay silent for ~10 s. Travel in pairs.",
+   "The skyscraper fire exit is a last resort; a Health stim lets you survive the jump."],
+  h: ["57 exterior turrets triggered by scanners.", "Lone listeners: 999 damage flash if you make noise while tracked.", "Falling buildings north of the ship.", "Hoarding Bugs, lizards, Nutcrackers, Barbers, Coil-Heads, Thumpers inside; dogs and Coil-Heads outside."]},
+ "Vindict": {g: ["580 credits, hazard A. Guaranteed first spot for a Triangulation device (ResearcherxB).",
+   "Cache in the valley behind and west of the ship: Recovery order plus crafting materials, rerolled each landing until someone gets close.",
+   "Keep clear of white mold spikes; mold inside cuts visibility, so move slowly."],
+  h: ["Mold spikes outside: 4 damage continuously nearby; inside spikes pulse 10 damage.", "Infected Bunker Spiders, Spore Lizards; Eyeless Dogs outside."]},
+ "Xenphir": {g: ["2200 credits, hazard S. Usually Rubber Rooms.", "Droops (up to 12) are everywhere: never walk between their hands."],
+  h: ["Droop: 100 damage and blinding light between its hands.", "Up to 12 Droops inside and out."]},
+ "Art Gallery": {g: ["Three floors; main entrance on the 2nd. Elevators (follow the music) link floors; dropping a floor costs 50 HP (two floors 100).",
+   "The Painting (apparatus, 220): in the room with a clock and lasers. You have ~90 s. Stand between laser sets; move when the lasers blink ONCE, wait on TWO blinks, and on THREE move on the second disappearance. Hug the wall to the center path at the start.",
+   "Vault reward (Cube Display): turn off the breaker box first to reveal the hint.",
+   "Decipher the Code: 4 symbols appear on the Cube Display; find each symbol with a number on the 2nd floor and enter the numbers.",
+   "Discover the Tower: on the 1st floor, turn the X-marked Hoarding Bug statues on the moving pillar; one has the code on its back.",
+   "Crack the Vault: on the 2nd floor's wooden area, turn each small dial until it clicks differently, add the three numbers, set the big dial to the sum, open the vault for the code.",
+   "Turn off fog machines by interacting with them. Moved paintings show an X with the breaker off and hide scrap."],
+  h: ["Lassos hanging from the ceiling: 666 damage.", "Lasso Man in paintings lashes out if you're loud nearby: 666 damage.", "Falling between floors: 50–100 damage."]},
+ "Asten Lab": {g: ["Lab interior (Asteroid-13, Hyx). Break glass containers for scrap. Check both doors of double doors before using a key.",
+   "Containment Door reward, three possible puzzles:",
+   "Security: pull the lever by the Security Office desk, then use the keyboard to open doors one at a time until the Containment Door opens (brute-forcing every door is fastest).",
+   "Containment Breach: kill all five Contaminated Snare Fleas (1 HP, glowing green) that spawn after landing.",
+   "Lockdown: in the chemistry room put the Sulfur Bottle in the tube above the red canister, Hydrogen Peroxide in the clear container, add oxygen from the canister on the floor, turn the red nozzle → take the Sulfuric Acid to the panel left of the Containment Door.",
+   "Cadaver Monstrosity event (crack in a Greenhouse wall): grab the two shovels, dodge its strikes, and hit the weak spot at the end of its tendril 10 times."],
+  h: ["Chemical bombs beep faster when near (even through walls): 50 damage or instant death, then a slippery floor.", "Cadaver Monstrosity strikes: 25 damage; its mouths lunge."]},
+ "Carnival": {g: ["Circus/funhouse interior (Carnate). Crouch through small doors; the rotating room changes exits.",
+   "Glass maze trophy (apparatus, 80): after taking it, run off the glass floor before it cracks.",
+   "Button Room reward, three possible puzzles:",
+   "Balloons in the Button Room: pop four balloons inside with a shovel or knife (each releases Confetbees).",
+   "Cages: find the clown face room, press the nose, then everyone has 40 s to get OUT of the building before it explodes.",
+   "Masks: cross the tightrope maze in the Abyss (or jetpack) and interact with the mask on the far side.",
+   "Hammerbots miss if you stand right up against them."],
+  h: ["Boxing gloves punch through doorways: 100 damage. Raised floor marks show where.", "Hammerbots: 999 damage overhead slam.", "Mouth pits and death pits (some black floors are fake)."]},
+ "Decrepit Store": {g: ["Facto's interior (separate download). Most scrap is in secured rooms with stacked crates.",
+   "Pulling the apparatus wakes one mannequin as a silent Coil-Head variant: assign a watcher before pulling."],
+  h: ["Mannequins: silent Coil-Head variants after the apparatus is pulled."]},
+ "Deep Sewers": {g: ["Narrow sewer maze (Narcotic). Graffiti hints at the Treasure Room and Snatcher.",
+   "Treasure Room: turn the wheel to drain the waste (~12 s), run down for gold bars/cash registers and back up before it refills (~45 s). Safe haul: four cups/rings or three pill bottles + one gold bar.",
+   "Valve Gate reward, three puzzles (graffiti by the gate tells which):",
+   "Flow machines: at three machines, work the yellow valve, then set the left and right levers to the written numbers (bottom 0, top 10).",
+   "Power box: at two boxes turn each knob until a unique click; sparking knobs must point UP before pressing the red button.",
+   "Sludge tunnel: follow the yellow pipe, swim the underwater maze turning yellow valves; lights point the way; return to the entrance for air each trip."],
+  h: ["Treasure Room waste: 2–18 damage per hit as it rises.", "Snatcher (8 HP Thumper variant) may spawn at 5:00 PM.", "Wrong knob position: 40 damage."]},
+ "Expanded Facility": {g: ["Bigger Facility (ResearcherxB, Release). Nail Machine near the entrance holds the reward; two Fuses sit next to it.",
+   "Drop metal scrap before an electrical gate, walk through, then pick it up (or use the rotating platform).",
+   "Restart the Power: fuse into two panels, then pull the crank when the moving light is on the yellow circle, three times each.",
+   "Fix the Breakers: fuse into two switch panels and find the order (wrong switch resets).",
+   "Control the Pressure: both fuses into the valve machine in Large Storage; wait ~180 s or turn venting valves to speed it up.",
+   "Then twist the Nail Machine dial."],
+  h: ["Electrical gates: 99 damage when crossing with metal scrap."]},
+ "Expanded Mineshaft": {g: ["Bigger Mineshaft (Infernis, Lecaro, Dreck, Descent…). Reward in the Locked Storage near the entrance.",
+   "Flick the Switches: on two panels, flip UP switches wired to a red light and DOWN all others.",
+   "Fuel the Generator: carry the Gas tank by the Locked Storage to the lit yellow generator in the caves and pour it in the funnel.",
+   "Dissolve the Webs: cross the Spider Cave pit (Bunker Spider waits there) and remove the web on the sparking pipe at the end.",
+   "Jump carefully across chasms and lifts."],
+  h: ["Chasms and lift shafts: falling is fatal.", "Spider Cave has a Bunker Spider and webs."]},
+ "Fractured Complex": {g: ["Factory interior (Empra, Asteroid-13). Sliding doors may slam shut and reopen later.",
+   "Secure Door reward, three puzzles:",
+   "Facility Pressure: at two valve sets, turn valves to add/subtract until the monitor matches the target on the wall (each valve must be turned back before reusing).",
+   "Facility Power: on two 3x3 panels, pressing a button flips its neighbors; make all green.",
+   "Facility Security: in the Security Room, read each of the six live wires' tag/color, then cut the matching wire on the 18-wire panel; press the button at the end.",
+   "Compactor event: feed Silver sheets into the gears to stall it while solving the five button grids; keep cheap sheets near the gears and the exit."],
+  h: ["Live floor wires: 15 damage per hit; wrong cut 90 damage.", "The Compactor crushes anyone inside if it isn't stalled."]},
+ "Grand Armory": {g: ["Five floors (Oldred, Selector). Elevator by the entrance. Turn off server-room levers after looting so their light turns green.",
+   "Toxic Apparatus (280) triggers a lockdown: fire exits lock and a spiked ceiling lowers. Leave via the main entrance or wait it out low.",
+   "Missile Container reward, three puzzles:",
+   "Radio Signals: in server rooms with a yellow light, turn the dial until the sounds match and press green (three times).",
+   "Code Input: the 4-digit code is on a sticky note in the Charging Station.",
+   "Communications: in the shipping container with a yellow light, decode the morse (circle short, dash long) using the board, enter it and press the emergency button.",
+   "Exterminator event: fight Skinned Thumpers with the Advanced nightstick (it stuns)."],
+  h: ["Lockdown ceiling: 999 damage.", "Swinging hooks: 25 damage.", "Lurkers' flamethrowers: 10 damage per hit.", "Glowing liquid pools: usually fatal."]},
+ "Greenhouse": {g: ["Corn fields (Faith, Spine). Find cover when the buzzer sounds three times.",
+   "Plasma Apparatus (95): pulling it starts flame sprinklers for ~45 s. Get indoors.",
+   "Secure Greenhouse reward; the sticky note by its button tells you which puzzle:",
+   "POWER: turn all switches green on four towers in the fields.",
+   "PRESSURE: in the humming room, keep every panel between the two red lines; focus on the two that drop fastest.",
+   "KILL: burn 15 Blatodara with Matches found in the fields (or pull the apparatus to burn them all).",
+   "Blatodara Swarm event (pot pushed into a hole): turn all switches green on the four corner acid sprayers."],
+  h: ["Acid pesticide rain every 3 hours from noon: 3 damage per hit.", "Decontamination flames after the apparatus pull: 6 damage per hit.", "Blatodara Swarm: 8 damage per hit plus slams."]},
+ "Rubber Rooms": {g: ["Psych ward (Motra, Alcatras, Xenphir). Infinite hallway: turn back to exit. The shifting hallway by the entrance changes floors.",
+   "Haunted Apparatus (90, 8 lb): after taking it, sprint the moment the door opens and don't stop.",
+   "Coffin reward, three puzzles:",
+   "Gut the Corpse: take the Gutting knife from the seat by the Coffin, find the nailed corpse, insert the knife and keep interacting until a key falls out.",
+   "Discover the Body: remember the cause of death by the Coffin, go to the morgue with eight trays, read the autopsy reports and open the matching tray only.",
+   "Pay in Blood: sit in three Padded Cell chairs and use the cranks (10 damage per finger), then place five fingers on the device by the Coffin.",
+   "Close the red X door fast if a floating head appears."],
+  h: ["Wrong morgue tray: 666 damage to everyone nearby.", "Spooky red door: 666 damage if not shut in time.", "Fake fire exit: shrinking hallway, run to the end.", "Haunted apparatus blood wave kills if it catches you."]},
+ "Spooky Manor": {g: ["Old mansion (Crowd, Gloom). Reward in the safe in the Attic, opened with a key.",
+   "Reveal the Key: find the room whose painting has glowing eyes and pull the key from the wall or floor.",
+   "Prepare for Dinner: in the Dining Hall count guests (plates with food): 0–2 all lights off; 3 or 5 lights off over guests, on elsewhere; 4 or 6 on over guests, off elsewhere; 7–8 all on. Key drops from the fireplace.",
+   "Pull the Books: in the Library, interact with all eight dark blue books with yellow bindings within ~35 s; the shelf opens to reveal the key."],
+  h: ["Standard mansion dangers; check each moon's enemy list."]},
+ "Toy Store": {g: ["Toy store (Filitrios). Chests may hold scrap; red glowing masks explode.",
+   "Pink Apparatus (110): taking it fires a shotgun from the face and spawns a Toy Face Jester ~30 s later. Leave right away.",
+   "Toy Vault reward (symbol on the vault shows the puzzle):",
+   "Nutcracker + key: kill the Key Wielding Nutcracker for the vault key (and a shotgun).",
+   "Masks: turn eight comedy/tragedy statues to face the shown directions (an already-correct one must be spun a full turn).",
+   "Button: cross the Web-Wire Room (usually keep right) through hidden tripwires and push the button.",
+   "Chest Gauntlet: after opening the end chest, wait at the intersection and pick the safe lane."],
+  h: ["Exploding chests: 65 damage.", "Tripwire shotguns: 99 damage (disarm by interacting); \"Welcome Home\" doorway trap: 200 damage.", "Ball pit: instant, unrecoverable death.", "Toy Face Jester after the Pink Apparatus."]}
+});
+
+const GOALS = [
+ ["Repress ship (needed for every ending)", [
+   ["apparatus","Normal Apparatus","From a Facility, Expanded Facility or Fractured Complex interior"],
+   ["oil1","Oil barrel #1","Most common on Oldred and Repress"],
+   ["oil2","Oil barrel #2",""],
+   ["panel","Untampered operating panel","7000 in Galetry gift shop, crafted on Gratar, or found on Hyx/Empra"]]],
+ ["Destiny items (pick an ending)", [
+   ["e4","Harrington's research 4 → Ending 4","Random scrap inside Utril"],
+   ["e5","Secret Coordinates → Ending 5","Release trial (Crowd → Narcotic → Descent → Extort → Release)"],
+   ["e6","Very secret coordinates → Ending 6","All five trial tickets"],
+   ["e2","Chunk of harold → Ending 2","Empra (needs Huge Harold, apparatus, jetpack)"],
+   ["e3","Stone of purification → Ending 3","Berunah hidden chamber route"]]],
+ ["Galetry special apparatus (unlock Hyx)", [
+   ["bloody","Bloody Apparatus","Demetrica"],
+   ["cosmic","Cosmic Apparatus","Cosmocos"],
+   ["royal","Royal Apparatus","Calist"]]]
+];
+
+/* ---------- hazard ranking ---------- */
+const HZ = ["Safe","F","D-","D","C","B.. for Bees","B","B+","B++","A","A+","S","S+","S++","S++++","Quack","???","I see you"];
+function hzRank(h){ const i = HZ.indexOf(h); return i < 0 ? 12 : i; }
+function hzClass(h){
+  const r = hzRank(h);
+  if (h === "Quack" || h === "???" || h === "I see you") return "h6";
+  if (r <= 3) return "h0"; if (r <= 5) return "h1"; if (r <= 8) return "h2"; if (r <= 10) return "h3"; if (r <= 12) return "h4"; return "h5";
+}
+const hzPill = h => `<span class="haz ${hzClass(h)}" title="Hazard level">${esc(h || "?")}</span>`;
+
+/* ---------- state + sync ---------- */
+const LS = "wm-guide-v1";
+const SEED = {moons:{"Asteroid-13":{u:1,v:1},"Junic":{u:1,v:1},"Infernis":{u:1,v:1},"Motra":{u:1,v:1},"Fission-C":{u:1},"Oldred":{u:1},"Galetry":{u:1,v:1},"MorvDonalds":{u:1},"Repress":{u:1}},found:{"Asteroid-13>Junic":1,"Motra>Fission-C":1,"Motra>Oldred":1},goals:{},t:0};
+let state = load();
+let db = null, crewDoc = null, writing = false, pending = false, lastRemote = 0;
+function load(){
+  try { const s = JSON.parse(localStorage.getItem(LS)); if (s && s.moons) return s; } catch(e){}
+  return JSON.parse(JSON.stringify(SEED));
+}
+function saveLocal(){ try { localStorage.setItem(LS, JSON.stringify(state)); } catch(e){} }
+let saveTimer = null;
+function commit(){
+  state.t = Date.now(); saveLocal(); renderAll(false);
+  if (crewDoc){ clearTimeout(saveTimer); saveTimer = setTimeout(pushRemote, 700); }
+}
+async function pushRemote(){
+  if (writing){ pending = true; return; }
+  writing = true;
+  try { await crewDoc.set({state: JSON.stringify(state), t: state.t}); setSync(true, "Synced with your crew"); }
+  catch(e){ setSync(false, "Saved on this device (sync failed)"); }
+  writing = false;
+  if (pending){ pending = false; pushRemote(); }
+}
+function setSync(on, txt){ const el = $("#sync"); el.classList.toggle("on", on); $("span", el).textContent = txt; }
+async function initDb(){
+  try {
+    if (!window.claude || !window.claude.use) return;
+    db = await window.claude.use("db");
+    if (!db) return;
+    crewDoc = db.doc("crew/progress");
+    let got = false;
+    const timer = setTimeout(() => { if (!got) setSync(false, "Saved on this device"); }, 10000);
+    crewDoc.onSnapshot(snap => {
+      got = true; clearTimeout(timer);
+      const data = snap && (typeof snap.data === "function" ? snap.data() : snap);
+      if (data && data.state){
+        if ((data.t || 0) > (state.t || 0) || !state.t){
+          try { state = JSON.parse(data.state); saveLocal(); renderAll(false); } catch(e){}
+        }
+        setSync(true, "Synced with your crew");
+      } else {
+        setSync(true, "Synced with your crew");
+        pushRemote();
+      }
+    }, () => setSync(false, "Saved on this device"));
+  } catch(e){ setSync(false, "Saved on this device"); }
+}
+const ms = n => state.moons[n] || (state.moons[n] = {});
+function isU(n){ const m = M[n]; return !!(state.moons[n]?.u || (m && m.default && state.moons[n]?.u !== 0)); }
+function isV(n){ return !!state.moons[n]?.v; }
+function setU(n, val){ ms(n).u = val ? 1 : 0; if (!val) ms(n).v = 0; commit(); }
+function setV(n, val){ ms(n).v = val ? 1 : 0; if (val) ms(n).u = 1; commit(); }
+
+/* ---------- data ---------- */
+let P = null, M = null, MAPS = null, NAV = null, PLAIN = null;
+const SLUG2TITLE = {};
+function available(n){
+  if (isU(n)) return false;
+  const m = M[n]; if (!m) return false;
+  if (n === "End" || n === "ResearcherxB") return false;
+  if (n === "Hyx") return ["Calist","Cosmocos","Demetrica"].every(isU);
+  return (m.sources || []).some(isU);
+}
+function iconFor(n){
+  const m = M[n]; if (!m || !m.slug) return null;
+  const pg = P[m.slug]; const ims = pg?.info?.images || [];
+  return (ims.find(i => /icon/i.test(i.label)) || ims[0])?.src || null;
+}
+function previewFor(slug){
+  const pg = P[slug]; if (!pg) return null;
+  if (window.INTICONS && INTICONS[pg.title]) return INTICONS[pg.title];
+  const ims = pg.info?.images || []; const hit = (ims.find(i => /preview/i.test(i.label)) || ims[0])?.src;
+  if (hit) return hit;
+  for (const s of pg.sections){ const m = /<img[^>]+src="(img\/[^"]+)"/.exec(s.html); if (m && !/class="icon"/.test(m[0])) return m[1]; }
+  return null;
+}
+function bigPreview(slug){
+  const pg = P[slug]; if (!pg) return null;
+  if (pg.kind === "interior"){ for (const s of pg.sections){ const m = /<img[^>]+src="(img\/[^"]+)"/.exec(s.html); if (m && !/class="icon"/.test(m[0])) return m[1]; } }
+  const ims = pg.info?.images || []; const hit = (ims.find(i => /in-game|preview/i.test(i.label)) || ims[0])?.src;
+  return hit || previewFor(slug);
+}
+function titleSlug(t){ for (const k of ["interior","moon","entity","guide"]) { const f = (NAV[k] || []).find(x => x[0] === t); if (f) return f[1]; } return null; }
+function intTiles(list){
+  return `<div class="ints">${(list || []).map(([n, p]) => { const sl = titleSlug(n); const ic = window.INTICONS && INTICONS[n]; const inner = `${ic ? `<img src="${esc(ic)}" alt="">` : `<span class="ph">${esc(n[0])}</span>`}<span><b>${esc(n)}</b><small>${p}%</small></span>`; return sl ? `<a class="int" href="#${sl}" title="Open the ${esc(n)} guide">${inner}</a>` : `<span class="int">${inner}</span>`; }).join("")}</div>`;
+}
+function moonLink(n){ const m = M[n]; return m?.slug ? `#${m.slug}` : (m?.wiki || "#moons"); }
+function moonChip(n){
+  const cls = isU(n) ? "u" : "l"; const m = M[n];
+  const ext = m && !m.slug ? ' target="_blank" rel="noopener"' : "";
+  return `<a class="chip ${cls}" href="${esc(moonLink(n))}"${ext}>${isU(n) ? "✓ " : ""}${esc(n)}</a>`;
+}
+function isRandom(t){ return /random|chance|randomly/i.test(t); }
+
+/* ---------- routing ---------- */
+function route(){
+  const h = location.hash.slice(1) || "home";
+  $$(".view").forEach(v => v.classList.remove("on"));
+  $$("nav.tabs a").forEach(a => a.removeAttribute("aria-current"));
+  let tab = h;
+  document.body.classList.toggle("home", h === "home");
+  document.documentElement.style.setProperty("--top", ($(".top").offsetHeight || 62) + "px");
+  requestAnimationFrame(() => document.documentElement.style.setProperty("--navh", ($(".top").offsetHeight || 52) + "px"));
+  if (h === "home"){ $("#v-home").classList.add("on"); renderHome(); }
+  else if (h === "progress"){ $("#v-progress").classList.add("on"); renderProgress(); }
+  else if (h === "moons"){ $("#v-moons").classList.add("on"); renderMoons(); }
+  else if (h === "interiors" || h === "entities" || h === "guides"){ $("#v-list").classList.add("on"); renderList(h); }
+  else if (h === "item-uses"){ $("#v-items").classList.add("on"); renderItems(); }
+  else if (h === "field-notes"){ $("#v-notes").classList.add("on"); renderNotes(); }
+  else if (P && P[h]){ $("#v-page").classList.add("on"); renderPage(h); tab = {moon:"moons",interior:"interiors",entity:"entities",guide:"guides"}[P[h].kind]; }
+  else { document.body.classList.add("home"); $("#v-home").classList.add("on"); renderHome(); tab = "home"; }
+  const a = $(`nav.tabs a[data-tab="${tab}"]`); if (a) a.setAttribute("aria-current","page");
+  window.scrollTo(0,0);
+}
+function renderAll(scroll){
+  const h = location.hash.slice(1) || "home";
+  const y = window.scrollY;
+  if (h === "home") renderHome(); else if (h === "progress") renderProgress(); else if (h === "moons") renderMoons();
+  else if (P && P[h] && P[h].kind === "moon") renderStatusBits(h);
+  if (!scroll) window.scrollTo(0, y);
+}
+
+
+/* ---------- shared helpers: unlock sections, guide + hazards, items ---------- */
+function waySection(title, cls, arr){
+  return arr.length ? `<div class="wsec"><div class="wsh ${cls}">${title} <span>${arr.length}</span></div>${arr.join("")}</div>` : "";
+}
+function grouped(list, render){
+  const g = [], r = [];
+  list.forEach(x => (x.random ? r : g).push(render(x)));
+  return waySection("Guaranteed", "g", g) + waySection("Random drops", "r", r);
+}
+function incoming(n){
+  return (M[n]?.sources || []).map(src => { const u = (M[src]?.unlocks || []).find(x => x.to === n); return {src, how: u ? u.how : "", random: u ? isRandom(u.how) : false}; });
+}
+function outgoing(n){ return (M[n]?.unlocks || []).map(u => ({to: u.to, how: u.how, random: isRandom(u.how)})); }
+function hazardList(n, m){
+  const T = TIPS[n], out = [...(T?.h || [])];
+  if (m && !m.vanilla){
+    const tr = m.traps || {}; const parts = [];
+    if (+tr.Turrets) parts.push(`up to ${tr.Turrets} turrets`); if (+tr.Landmines) parts.push(`${tr.Landmines} landmines`); if (+tr["Spike Traps"]) parts.push(`${tr["Spike Traps"]} spike traps`);
+    if (parts.length) out.push("Traps: " + parts.join(", ") + ".");
+    if (m.indoor) out.push("Main indoor enemies: " + m.indoor + ".");
+    if (m.outdoor) out.push("Main outdoor enemies: " + m.outdoor + ".");
+    const bad = (m.weather || "").split(/,\s*/).filter(w => /Eclipsed|Forsaken|Hallowed|Minefield|Hurricane|Flooded/i.test(w));
+    if (bad.length) out.push("Rough weather possible: " + bad.join(", ") + ".");
+  }
+  return out;
+}
+function guideHazards(n, m, compact){
+  const T = TIPS[n]; const hz = hazardList(n, m);
+  if (!T && !hz.length) return "";
+  const H = compact ? "h3" : "h2";
+  const guide = T ? `<div class="callout"><${H}>Guide</${H}><ul>${T.g.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
+  const haz = hz.length ? `<div class="hazbox"><${H}>Hazards</${H}><ul>${hz.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
+  return `<div class="gh ${compact ? "compact" : ""}">${guide}${haz}</div>`;
+}
+const ITEM_KEY = t => String(t || "").replace(/\s+/g, " ").trim().toLowerCase();
+function findItem(t){
+  const I = window.ITEMS || {}; let k = ITEM_KEY(t);
+  if (I[k]) return k;
+  k = k.replace(/^\(lore\)\s*/, "").replace(/\s*\(.*?\)$/, "").replace(/\s*\d+x$/, "");
+  if (I[k]) return k;
+  if (k.endsWith("s") && I[k.slice(0, -1)]) return k.slice(0, -1);
+  return null;
+}
+function showItem(k, el){
+  const it = (window.ITEMS || {})[k]; if (!it) return;
+  const pop = $("#pop");
+  const rows = [it.v && `<dt>Value</dt><dd>${esc(it.v)}</dd>`, it.w && `<dt>Weight</dt><dd>${esc(it.w)} lb</dd>`, it.two && `<dt>Two-handed</dt><dd>${esc(it.two)}</dd>`, it.where && `<dt>Found</dt><dd>${esc(it.where)}</dd>`].filter(Boolean).join("");
+  pop.innerHTML = `<button class="pclose" aria-label="Close">×</button>${it.img ? `<img class="pimg" src="${esc(it.img)}" alt="">` : ""}<div class="eyebrow">${esc(it.t)}</div><b>${esc(it.n)}</b><p>${esc(it.d)}</p>${rows ? `<dl class="facts">${rows}</dl>` : ""}<div class="plinks">${it.link ? `<a href="${esc(it.link)}" target="_blank" rel="noopener">Lethal Company wiki</a>` : ""}<a href="#item-uses">All items</a></div>`;
+  pop.hidden = false;
+  const r = el.getBoundingClientRect(); const w = Math.min(360, innerWidth - 16);
+  pop.style.width = w + "px"; pop.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + "px";
+  const below = r.bottom + 6, h = pop.offsetHeight;
+  pop.style.top = (below + h > innerHeight - 8 ? Math.max(8, r.top - h - 6) : below) + "px";
+  $(".pclose", pop).onclick = () => pop.hidden = true;
+}
+function linkItems(root){
+  $$("table", root).forEach(tb => $$("tr", tb).forEach(tr => {
+    const td = tr.querySelector("td"); if (!td || td.querySelector(".itemlink")) return;
+    const k = findItem(td.textContent); if (!k) return;
+    if (td.querySelector("a")) td.insertAdjacentHTML("beforeend", ` <button class="itemlink info" data-item="${esc(k)}" aria-label="What does this item do?">?</button>`);
+    else td.innerHTML = `<button class="itemlink" data-item="${esc(k)}" title="What does this item do?">${td.innerHTML}</button>`;
+  }));
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest(".itemlink"); if (b){ e.preventDefault(); showItem(b.dataset.item, b); return; }
+  if (!e.target.closest("#pop")) { const p = $("#pop"); if (p) p.hidden = true; }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") { const p = $("#pop"); if (p) p.hidden = true; } });
+
+let itemFilter = {q: "", t: "useful"};
+function renderItems(){
+  const I = Object.values(window.ITEMS || {});
+  const types = [...new Set(I.map(x => x.t))];
+  const useful = x => x.t !== "Scrap" && x.t !== "Reward" && x.t !== "Action figure";
+  const list = I.filter(x => itemFilter.t === "all" ? true : itemFilter.t === "useful" ? useful(x) : x.t === itemFilter.t)
+    .filter(x => !itemFilter.q || (x.n + " " + x.d + " " + (x.where || "")).toLowerCase().includes(itemFilter.q))
+    .sort((a, b) => a.t.localeCompare(b.t) || a.n.localeCompare(b.n));
+  const chip = (k, l) => `<button aria-pressed="${itemFilter.t === k}" data-it="${esc(k)}">${esc(l)}</button>`;
+  let cur = "";
+  const rows = list.map(x => { const head = x.t !== cur ? `<tr class="grp"><th colspan="5">${esc(x.t)}</th></tr>` : ""; cur = x.t;
+    return `${head}<tr><td class="ithumb">${x.img ? `<img src="${esc(x.img)}" alt="" loading="lazy">` : ""}</td><td><b>${esc(x.n)}</b></td><td>${esc(x.d)}${x.link ? ` <a href="${esc(x.link)}" target="_blank" rel="noopener">wiki</a>` : ""}</td><td class="n">${esc(x.v || "")}</td><td class="n">${x.w ? esc(x.w) + " lb" : ""}</td></tr>`; }).join("");
+  $("#v-items").innerHTML = `<div class="filters"><h1 style="font-size:22px;margin-right:8px">Items</h1>
+    <input type="search" id="iq" class="tf" style="margin:0;width:min(280px,100%)" placeholder="Search items…" value="${esc(itemFilter.q)}" aria-label="Search items">
+    <div class="seg" role="group" aria-label="Item type">${chip("useful", "Usable & special")}${chip("all", "All")}${types.sort().map(t => chip(t, t)).join("")}</div></div>
+    <p style="margin:0 0 8px;font-size:13px;color:var(--muted)">${list.length} items. Most of Wesley's regular scrap has no use besides selling. Descriptions come from the Wesley's Moons and Lethal Company wikis, plus notes from your questions.</p>
+    <div class="tablewrap"><table class="moons items"><thead><tr><th aria-label="Picture"></th><th>Item</th><th>What it does</th><th>Value</th><th>Weight</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  const q = $("#iq"); q.oninput = () => { itemFilter.q = q.value.toLowerCase(); const pos = q.selectionStart; renderItems(); const n = $("#iq"); n.focus(); n.setSelectionRange(pos, pos); };
+  $$("#v-items [data-it]").forEach(b => b.onclick = () => { itemFilter.t = b.dataset.it; renderItems(); });
+}
+
+/* ---------- progression tree (layout after the community map by WhiteA12) ---------- */
+const TPOS = {
+ "Galetry":[695,65], "Repress":[1235,55], "MorvDonalds":[1120,55],
+ "Dreck":[145,155], "Core":[145,280], "Faith":[145,405], "Berunah":[145,522],
+ "Crowd":[340,158], "Narcotic":[340,280], "Descent":[340,405], "Extort":[340,520], "Release":[340,637],
+ "Infernis":[595,165], "Atlantica":[497,287], "Lecaro":[500,407], "Thalasso":[505,522], "Utril":[507,640], "Cubatres":[598,700],
+ "Acidir":[690,287], "Polarus":[690,465], "Cosmocos":[690,640], "Glimmer":[795,688],
+ "Asteroid-13":[895,160], "Junic":[895,287], "Roart":[795,322], "Chasm":[990,322], "Spine":[1078,368], "Etern":[895,415], "Dune":[988,457], "Glace":[895,530], "Calist":[900,648],
+ "Hyx":[900,768], "Empra":[900,875],
+ "Motra":[1203,172], "Fission-C":[1290,218], "Selector":[1376,262], "Dormant":[1466,306], "Xenphir":[1556,352],
+ "Oldred":[1203,292], "Duckstroid-14":[1290,368], "Trite":[1206,422], "Heap":[1288,472], "Vindict":[1062,578], "Filitrios":[1206,542], "Centrus":[1286,596], "Demetrica":[1206,648],
+ "Desolation":[1540,480], "Facto":[1110,700], "Gratar":[1196,835], "Alcatras":[1430,760], "Gloom":[1585,760], "Hyve":[1476,960],
+ "ResearcherxB":[130,1050], "Carnate":[685,1000], "End":[900,1000]
+};
+const TLAB = {"Spine":"r","Selector":"r","Dormant":"r","Xenphir":"r","Dune":"r","Heap":"r","Glimmer":"r","Cubatres":"r","Centrus":"r","Duckstroid-14":"r","Fission-C":"r","Chasm":"r"};
+const TEDGES = [
+ ["Galetry","Dreck"],["Galetry","Crowd"],["Galetry","Infernis"],["Galetry","Asteroid-13"],["Galetry","Motra"],
+ ["Dreck","Core"],["Core","Faith"],["Faith","Berunah"],
+ ["Crowd","Narcotic"],["Narcotic","Descent"],["Descent","Extort"],["Extort","Release"],
+ ["Infernis","Atlantica"],["Infernis","Acidir"],["Atlantica","Lecaro"],["Lecaro","Thalasso"],["Thalasso","Utril"],["Utril","Cubatres"],
+ ["Acidir","Polarus"],["Polarus","Cosmocos"],["Cosmocos","Glimmer"],
+ ["Asteroid-13","Junic"],["Junic","Roart"],["Junic","Chasm"],["Junic","Etern"],["Chasm","Spine"],["Etern","Dune"],["Etern","Glace"],["Glace","Calist"],["Glace","Vindict"],
+ ["Motra","Fission-C"],["Motra","Oldred"],["Fission-C","Selector"],["Selector","Dormant"],["Dormant","Xenphir"],["Selector","Vindict"],
+ ["Oldred","Duckstroid-14"],["Oldred","Trite"],["Trite","Heap"],["Trite","Filitrios"],["Trite","Vindict"],["Filitrios","Demetrica"],["Filitrios","Centrus"],
+ ["Polarus","Desolation"],["Utril","Desolation"],["Motra","Alcatras"],["Demetrica","Alcatras"],
+ ["Calist","Hyx","s"],["Cosmocos","Hyx","s"],["Demetrica","Hyx","s"],["Hyx","Empra"],
+ ["Berunah","End","s"],["Release","End","s"],["Utril","End","s"],["Empra","End","s"],["Carnate","End","s"],["Repress","End","s"],
+ ["Vindict","ResearcherxB","s"],["ResearcherxB","Carnate","s"],["Repress","Gratar"]
+];
+const BRANCH = {"Galetry":"#8fd16a","Dreck":"#e9dfe3","Core":"#b9a7c9","Faith":"#d9a7d6","Berunah":"#f0d27a","Crowd":"#8fbf63","Narcotic":"#c49a7a","Descent":"#f1e7c9","Extort":"#bfe8ee","Release":"#e09a5c",
+ "Infernis":"#e0573a","Atlantica":"#7fc7d6","Lecaro":"#e0603a","Thalasso":"#9aaad6","Utril":"#b39dd0","Cubatres":"#c9a07a","Acidir":"#6cc95a","Polarus":"#e6f3f7","Cosmocos":"#d9b8f2","Glimmer":"#d9b8f2",
+ "Asteroid-13":"#d0d0d0","Junic":"#a6ec74","Roart":"#7fc79a","Chasm":"#b8b88a","Spine":"#e6e6f7","Etern":"#f0d27a","Dune":"#e8d88a","Glace":"#e6eef7","Calist":"#d9a87a",
+ "Motra":"#d8f0e0","Fission-C":"#f0c060","Selector":"#d6e6f0","Dormant":"#c9e07a","Xenphir":"#c0c8d8","Oldred":"#e0d0a8","Duckstroid-14":"#f5c518","Trite":"#d0c0a0","Heap":"#c0b090","Vindict":"#f0e8e8",
+ "Filitrios":"#8fe0b0","Centrus":"#d0e0c0","Demetrica":"#e0605a","Hyx":"#e0804a","Empra":"#f0d070","Desolation":"#d0605a","Gratar":"#8aa0e0","Alcatras":"#b0b8f0","Gloom":"#80b0a0","Hyve":"#f0c060",
+ "Repress":"#aab3c8","End":"#aab3c8","ResearcherxB":"#e8e8e8","Carnate":"#e0a080","Facto":"#c0b0a0","MorvDonalds":"#f0c040"};
+let tv = null, tsel = null, tAll = false;
+const TV0 = () => (document.body.classList.contains("home") && innerWidth > 1000) ? [-215, -80, 2160, 1260] : [-60, -40, 2120, 1220];
+function tIcon(n){ if (n === "End") n = "Repress"; return (window.ICONS && ICONS[n]) || iconFor(n) || ""; }
+function tStatus(n){ return isV(n) ? "vis" : isU(n) ? "unl" : available(n) ? "reach" : "locked"; }
+function tPath(a, b){
+  const [x1,y1] = TPOS[a], [x2,y2] = TPOS[b]; const r = 30;
+  const dx = x2 - x1, dy = y2 - y1, d = Math.hypot(dx, dy) || 1;
+  const sx = x1 + dx / d * r, sy = y1 + dy / d * r, ex = x2 - dx / d * (r + 6), ey = y2 - dy / d * (r + 6);
+  const bend = Math.min(60, d * .18), nx = -dy / d * bend, ny = dx / d * bend;
+  return `M${sx.toFixed(1)},${sy.toFixed(1)} Q${((sx + ex) / 2 + nx).toFixed(1)},${((sy + ey) / 2 + ny).toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}`;
+}
+function treeSvg(){
+  const stars = []; let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 260; i++) stars.push(`<circle cx="${(rnd() * 2000).toFixed(0)}" cy="${(rnd() * 1150).toFixed(0)}" r="${(rnd() * 1.4 + .3).toFixed(1)}" fill="#fff" opacity="${(rnd() * .6 + .15).toFixed(2)}"/>`);
+  const main = new Set(TEDGES.map(e => e[0] + ">" + e[1]));
+  const alt = [];
+  for (const [n, m] of Object.entries(M)){
+    if (!TPOS[n]) continue;
+    for (const s of (m.sources || [])){
+      if (!TPOS[s] || main.has(s + ">" + n)) continue;
+      if (tAll || n === tsel || s === tsel) alt.push([s, n]);
+    }
+  }
+  const rel = e => tsel && (e[0] === tsel || e[1] === tsel);
+  const anyRel = TEDGES.some(rel) || alt.some(rel);
+  const edgeCol = (a, b) => isU(b) ? "#5cc28a" : (isU(a) ? "#f0a23a" : (BRANCH[a] || "#8a8f9a"));
+  const mk = (a, b) => isU(b) ? "g" : isU(a) ? "o" : "n";
+  const edges = TEDGES.map(e => `<path class="edge ${e[2] === "s" ? "special" : ""} ${anyRel && !rel(e) ? "dim" : ""} ${rel(e) ? "hl" : ""}" d="${tPath(e[0], e[1])}" stroke="${edgeCol(e[0], e[1])}" marker-end="url(#ah-${mk(e[0], e[1])})"/>`).join("")
+    + alt.map(e => `<path class="edge alt ${rel(e) ? "hl" : ""}" d="${tPath(e[0], e[1])}" stroke="${isU(e[0]) ? "#f0a23a" : "#8a8f9a"}" marker-end="url(#ah-${isU(e[0]) ? "o" : "n"})"/>`).join("");
+  const nodes = Object.entries(TPOS).filter(([n]) => M[n]).map(([n, [x, y]]) => {
+    const st = tStatus(n), ic = tIcon(n), lab = TLAB[n] || "t";
+    const big = n === "Galetry" || n === "End";
+    const tx = lab === "r" ? x + 36 : x, ty = lab === "r" ? y + 7 : y - (big ? 44 : 37), anchor = lab === "r" ? "start" : "middle";
+    const col = st === "locked" ? "#8a8f9a" : (BRANCH[n] || "#e9e4d8");
+    const R = big ? 33 : 27, I = big ? 60 : 50;
+    return `<g class="node ${st} ${n === tsel ? "sel" : ""}" data-n="${esc(n)}" tabindex="0" role="button" aria-label="${esc(n)}, ${({vis:"visited",unl:"unlocked",reach:"reachable now",locked:"locked"})[st]}">
+      <circle class="halo" cx="${x}" cy="${y}" r="${R + 7}"/>
+      <circle cx="${x}" cy="${y}" r="${R}" fill="#151821"/>
+      ${ic ? `<image href="${esc(ic)}" x="${x - I / 2}" y="${y - I / 2}" width="${I}" height="${I}" preserveAspectRatio="xMidYMid meet" style="image-rendering:pixelated"/>` : `<text x="${x}" y="${y + 7}" text-anchor="middle" fill="#cfcabd" style="font-size:20px">${esc(n[0])}</text>`}
+      <circle class="ring" cx="${x}" cy="${y}" r="${R + 1}"/>
+      <text x="${tx}" y="${ty}" text-anchor="${anchor}" fill="${col}" style="${big ? "font-size:30px" : ""}">${esc(n === "End" ? "Repress / End" : n)}</text>
+    </g>`;
+  }).join("");
+  const ah = (id, c) => `<marker id="ah-${id}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`;
+  const zones = `<g fill="none" stroke="#3a3f4a" stroke-dasharray="3 6" stroke-width="1.5"><rect x="1370" y="405" width="340" height="265" rx="8"/><rect x="1010" y="740" width="360" height="390" rx="8"/><rect x="1385" y="690" width="335" height="440" rx="8"/><rect x="10" y="935" width="560" height="200" rx="8"/></g>
+   <g font-family="IBM Plex Mono, monospace" font-size="13" fill="#8d8a82"><text x="1385" y="426">Alt. unlock: eclipse meteor or crash log</text><text x="1022" y="760">Gratar: tape always on Repress · fabricator</text><text x="1398" y="710">Random-drop moons: files, tapes, hives</text><text x="22" y="956">Triangulation: Vindict + 6 random moons</text></g>`;
+  const note = `<g font-family="IBM Plex Mono, monospace" fill="#cfcabd" font-size="15" text-anchor="middle"><text x="1560" y="132">Repress is unlocked from the start, like Galetry.</text><text x="1560" y="154">Bring a destiny item to Repress for an ending (6 endings).</text><text x="1560" y="180" fill="#8d8a82" font-size="13">Dotted lines: special requirements (apparatus, destiny items, triangulation)</text></g>`;
+  return `<svg id="treesvg" viewBox="${tv.join(" ")}" xmlns="http://www.w3.org/2000/svg" aria-label="Moon progression tree">
+    <defs>${ah("g", "#5cc28a")}${ah("o", "#f0a23a")}${ah("n", "#8a8f9a")}</defs>
+    <g>${stars.join("")}</g>${zones}${note}<g>${edges}</g><g>${nodes}</g></svg>`;
+}
+function treeSide(n){
+  const m = M[n]; if (!m) return "";
+  const u = isU(n), v = isV(n), st = tStatus(n);
+  const ways = grouped(incoming(n), x => `<div class="way"><b>${isU(x.src) ? "✓ " : ""}From ${esc(x.src)}</b><br>${esc(x.how || "See the moon's page.")}</div>`)
+    || `<div class="way">${m.default ? "Unlocked by default." : n === "Hyx" ? "Insert the Bloody, Cosmic and Royal apparatus in Galetry's hidden backstage." : "See the moon's page."}</div>`;
+  const outs = grouped(outgoing(n), x => `<div class="way"><b>${esc(x.to)}</b><br>${esc(x.how)}</div>`) || `<div class="way">Doesn't unlock other moons.</div>`;
+  const tips = guideHazards(n, m, true);
+  return `<div class="eyebrow">${m.num ? "Moon " + m.num : "Moon"} · ${({vis:"Visited",unl:"Unlocked",reach:"Reachable now",locked:"Locked"})[st]}</div>
+    <h2>${esc(n)}</h2>
+    <div class="row">${hzPill(m.hazard)}<span class="chip mono">${m.price ? "▮" + m.price : "Free"}</span>${m.scrap?.[1] != null ? `<span class="chip mono">${m.scrap[0]}–${m.scrap[1]} scrap</span>` : ""}${m.est ? `<span class="chip mono">~${m.est} loot</span>` : ""}</div>
+    <div class="row"><button class="toggle tu" aria-pressed="${u}" id="tsu">${u ? "✓ Unlocked" : "Mark unlocked"}</button><button class="toggle tv" aria-pressed="${v}" id="tsv">${v ? "✓ Visited" : "Mark visited"}</button>${m.slug ? `<a class="btn primary" style="text-decoration:none;margin-left:auto" href="#${m.slug}">Open guide</a>` : ""}</div>
+    ${m.indoor ? `<p style="font-size:13px;margin:6px 0 0;color:var(--muted)">Inside: ${esc(m.indoor)}<br>Outside: ${esc(m.outdoor || "–")}</p>` : ""}
+    ${(m.interiors || []).length ? `<h3>Possible interiors (click to open)</h3>${intTiles(m.interiors)}` : ""}
+    ${tips}<h3>How to get here</h3>${ways}<h3>Unlocks from here</h3>${outs}`;
+}
+function treeOverview(){
+  const {wes, uN, vN, avail} = progressNumbers();
+  const btn = n => `<button class="pick" data-pick="${esc(n)}">${hzPill(M[n].hazard)}<span>${esc(n)}</span><small>${M[n].price ? "▮" + M[n].price : "Free"}</small></button>`;
+  const sure = avail.filter(n => incoming(n).some(x => isU(x.src) && !x.random)), luck = avail.filter(n => !sure.includes(n));
+  return `<div class="eyebrow">Crew progress</div><h2>Moon map</h2>
+    <div class="row"><span class="chip mono">${uN}/${wes.length} unlocked</span><span class="chip mono">${vN} visited</span><span class="chip mono">${avail.length} reachable</span></div>
+    <p style="font-size:13.5px;margin:6px 0">Click a moon for its guide, hazards and unlock routes. Click empty space to clear the selection.</p>
+    ${sure.length ? `<div class="wsh g" style="margin-top:10px">Guaranteed next unlocks <span>${sure.length}</span></div><div class="picks">${sure.map(btn).join("")}</div>` : ""}
+    ${luck.length ? `<div class="wsh r" style="margin-top:10px">Random-drop unlocks <span>${luck.length}</span></div><div class="picks">${luck.map(btn).join("")}</div>` : ""}
+    <p style="margin-top:12px"><a class="btn" href="#progress" style="text-decoration:none">Full progress page →</a></p>`;
+}
+function wireResize(){
+  const tree = $("#tree"), h = $("#tresize"); if (!tree || !h) return;
+  let w = 360; try { w = +localStorage.getItem("wm-sidew") || 360; } catch(e){}
+  const set = v => { w = Math.round(Math.max(280, Math.min(v, tree.clientWidth * 0.7))); tree.style.setProperty("--sidew", w + "px"); };
+  const save = () => { try { localStorage.setItem("wm-sidew", w); } catch(e){} };
+  set(w);
+  let drag = false;
+  h.addEventListener("pointerdown", e => { drag = true; h.classList.add("on"); h.setPointerCapture(e.pointerId); e.preventDefault(); });
+  h.addEventListener("pointermove", e => { if (drag) set(tree.getBoundingClientRect().right - e.clientX); });
+  h.addEventListener("pointerup", () => { drag = false; h.classList.remove("on"); save(); });
+  h.addEventListener("keydown", e => { if (e.key === "ArrowLeft"){ set(w + 30); save(); e.preventDefault(); } if (e.key === "ArrowRight"){ set(w - 30); save(); e.preventDefault(); } });
+  h.addEventListener("dblclick", () => { set(360); save(); });
+}
+function renderTree(){
+  const host = $("#tree"); if (!host) return;
+  if (!tv) tv = TV0();
+  const stage = $(".tree-stage", host);
+  stage.querySelector("svg")?.remove();
+  stage.insertAdjacentHTML("afterbegin", treeSvg());
+  $(".tree-side", host).innerHTML = tsel ? treeSide(tsel) : treeOverview();
+  const svg = $("#treesvg");
+  $$(".node", svg).forEach(g => {
+    const pick = () => { tsel = g.dataset.n; renderTree(); };
+    g.addEventListener("click", () => { if (!svg.dataset.moved) pick(); });
+    const open = () => { const m = M[g.dataset.n]; if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); if (m?.slug) location.hash = m.slug; };
+    g.addEventListener("dblclick", open);
+    g.addEventListener("contextmenu", e => { e.preventDefault(); open(); });
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+  });
+  $$(".tree-side [data-pick]").forEach(b => b.onclick = () => { tsel = b.dataset.pick; renderTree(); });
+  svg.addEventListener("click", e => { if (!svg.dataset.moved && !e.target.closest(".node") && tsel){ tsel = null; renderTree(); } });
+  const su = $("#tsu"), sv = $("#tsv");
+  if (su) su.onclick = () => setU(tsel, !isU(tsel));
+  if (sv) sv.onclick = () => setV(tsel, !isV(tsel));
+  wirePanZoom(svg);
+}
+function wirePanZoom(svg){
+  const stage = svg.parentElement;
+  const apply = () => svg.setAttribute("viewBox", tv.join(" "));
+  const scaleOf = () => { const r = svg.getBoundingClientRect(); return Math.max(tv[2] / r.width, tv[3] / r.height); };
+  const toSvg = (cx, cy) => { const r = svg.getBoundingClientRect(); const s = scaleOf(); const ox = (r.width * s - tv[2]) / 2, oy = (r.height * s - tv[3]) / 2; return [tv[0] - ox + (cx - r.left) * s, tv[1] - oy + (cy - r.top) * s]; };
+  const zoom = (f, cx, cy) => { const [px, py] = cx == null ? [tv[0] + tv[2] / 2, tv[1] + tv[3] / 2] : toSvg(cx, cy); const w = Math.min(2600, Math.max(300, tv[2] * f)); const k = w / tv[2]; tv = [px - (px - tv[0]) * k, py - (py - tv[1]) * k, w, tv[3] * k]; apply(); };
+  svg.addEventListener("wheel", e => { e.preventDefault(); zoom(e.deltaY > 0 ? 1.15 : 1 / 1.15, e.clientX, e.clientY); }, {passive: false});
+  let drag = null;
+  svg.addEventListener("pointerdown", e => { drag = {x: e.clientX, y: e.clientY, v: tv.slice(), s: scaleOf()}; delete svg.dataset.moved; });
+  svg.addEventListener("pointermove", e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 4){ svg.dataset.moved = 1; stage.classList.add("drag"); } tv = [drag.v[0] - dx * drag.s, drag.v[1] - dy * drag.s, drag.v[2], drag.v[3]]; apply(); });
+  const end = () => { drag = null; stage.classList.remove("drag"); setTimeout(() => delete svg.dataset.moved, 0); };
+  svg.addEventListener("pointerup", end); svg.addEventListener("pointerleave", end);
+  $("#tzin").onclick = () => zoom(1 / 1.3); $("#tzout").onclick = () => zoom(1.3);
+  $("#tzreset").onclick = () => { tv = TV0(); apply(); };
+  $("#tall").onchange = e => { tAll = e.target.checked; renderTree(); };
+  const fb = $("#tfull"), tree = $("#tree");
+  fb.textContent = document.fullscreenElement ? "Exit full screen" : "⛶ Full screen";
+  fb.onclick = () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (tree.requestFullscreen) tree.requestFullscreen().catch(() => { fb.textContent = "Full screen not available"; }); };
+}
+
+/* ---------- home / tracker ---------- */
+function progressNumbers(){
+  const wes = Object.values(M).filter(m => !m.vanilla && m.name !== "End");
+  const avail = Object.keys(M).filter(available).sort((a,b) => hzRank(M[a].hazard) - hzRank(M[b].hazard) || (M[a].price||0) - (M[b].price||0));
+  return {wes, uN: wes.filter(m => isU(m.name)).length, vN: wes.filter(m => isV(m.name)).length, avail};
+}
+function renderHome(){
+  const {wes, uN, vN, avail} = progressNumbers();
+  $("#v-home").innerHTML = `
+  <div class="tree" id="tree">
+    <div class="tree-stage">
+      <div class="tree-tools"><button id="tzin" aria-label="Zoom in">+ Zoom</button><button id="tzout" aria-label="Zoom out">−</button><button id="tzreset">Fit</button><button id="tfull">⛶ Full screen</button><label><input type="checkbox" id="tall" ${tAll ? "checked" : ""}> Show all alternate routes</label><a class="tsum" href="#progress" title="Open the progress page">${uN}/${wes.length} unlocked · ${vN} visited · ${avail.length} reachable →</a></div>
+      <div class="tree-legend"><span><i style="border-color:#f0a23a"></i>Visited</span><span><i style="border-color:#5cc28a"></i>Unlocked</span><span><i style="border-color:#f0a23a;border-style:dashed"></i>Reachable now</span><span><i style="border-color:#3a3f4a"></i>Locked</span><span>Click: details · Right-click or double-click: open guide · Drag / scroll: pan &amp; zoom</span></div>
+      <div class="tree-credit">Layout after the community progression map by WhiteA12 (inspired by Nagatonis)</div>
+    </div>
+    <div class="tree-resize" id="tresize" role="separator" aria-orientation="vertical" aria-label="Resize the moon panel (drag, or use arrow keys)" tabindex="0"></div>
+    <aside class="tree-side" aria-live="polite"></aside>
+  </div>`;
+  wireResize();
+  renderTree();
+}
+function renderProgress(){
+  const {wes, uN, vN, avail} = progressNumbers();
+  const card = n => {
+    const m = M[n];
+    const ways = incoming(n).filter(x => isU(x.src));
+    const body = grouped(ways, x => `<p><span class="from">From ${esc(x.src)}</span><br>${esc(x.how || "See the moon's page.")}</p>`);
+    return `<div class="next-item"><header>${hzPill(m.hazard)}<a href="${esc(moonLink(n))}">${esc(n)}</a><span class="chip mono">${m.price ? "▮" + m.price : "Free"}</span>${m.est ? `<span class="chip mono" title="Estimated loot per day">~${m.est} loot</span>` : ""}<button class="toggle tu" aria-pressed="false" data-u="${esc(n)}" style="margin-left:auto">Mark unlocked</button></header>${body}</div>`;
+  };
+  const sure = avail.filter(n => incoming(n).some(x => isU(x.src) && !x.random));
+  const luck = avail.filter(n => !sure.includes(n));
+  const nextHtml = avail.length ? `${sure.length ? `<h3 class="nh g">Guaranteed unlocks (${sure.length})</h3><div class="next-list">${sure.map(card).join("")}</div>` : ""}${luck.length ? `<h3 class="nh r">Random-drop unlocks (${luck.length})</h3><div class="next-list">${luck.map(card).join("")}</div>` : ""}` : `<p>Nothing new is reachable from your unlocked moons.</p>`;
+  const goalsHtml = GOALS.map(([title, items]) => `<h3>${esc(title)}</h3><ul>${items.map(([k, t, d]) => `<li><label><input type="checkbox" data-goal="${k}" ${state.goals?.[k] ? "checked" : ""}><span>${esc(t)}${d ? `<small>${esc(d)}</small>` : ""}</span></label></li>`).join("")}</ul>`).join("");
+  $("#v-progress").innerHTML = `
+  <div class="hero">
+    <div class="panel">
+      <div class="eyebrow">Crew progress</div>
+      <h1 style="font-size:26px;margin-top:2px">Where we are</h1>
+      <div class="stats">
+        <div class="stat"><b>${uN}<span style="font-size:16px;color:var(--muted)"> / ${wes.length}</span></b><span>Wesley moons unlocked</span></div>
+        <div class="stat"><b>${vN}</b><span>Moons visited</span></div>
+        <div class="stat"><b>${avail.length}</b><span>Unlocks within reach</span></div>
+      </div>
+      <div class="bar" aria-hidden="true"><i style="width:${Math.round(uN / wes.length * 100)}%"></i></div>
+      <p style="margin:10px 0 0;font-size:14px;color:var(--muted)">Tick moons on the map, the moon list or each moon's page. "Next up" lists every moon you can reach from what you have, easiest first, with the exact step from each moon.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><a class="btn primary" href="#home" style="text-decoration:none">Back to the map</a><a class="btn" href="#moons" style="text-decoration:none">Moon list</a><a class="btn" href="#field-notes" style="text-decoration:none">Field notes</a></div>
+    </div>
+    <div class="panel goals"><h2>Goals checklist</h2>${goalsHtml}</div>
+  </div>
+  <div class="panel next"><h2>Next up: moons you can unlock now</h2>${nextHtml}</div>`;
+  $$("#v-progress [data-u]").forEach(b => b.onclick = () => setU(b.dataset.u, true));
+  $$("#v-progress [data-goal]").forEach(c => c.onchange = () => { state.goals = state.goals || {}; state.goals[c.dataset.goal] = c.checked ? 1 : 0; commit(); });
+}
+
+/* ---------- moon list ---------- */
+let mf = {show:"all", vanilla:false, sort:"route", dir:1};
+function renderMoons(){
+  let list = Object.values(M).filter(m => mf.vanilla || !m.vanilla);
+  if (mf.show === "unlocked") list = list.filter(m => isU(m.name));
+  if (mf.show === "available") list = list.filter(m => available(m.name));
+  if (mf.show === "locked") list = list.filter(m => !isU(m.name));
+  const key = {
+    route: m => hzRank(m.hazard) * 10000 + (m.price || 0),
+    name: m => m.name.toLowerCase(), num: m => m.num ?? 999, price: m => m.price || 0,
+    hazard: m => hzRank(m.hazard), scrap: m => (m.scrap?.[0] || 0) + (m.scrap?.[1] || 0),
+    est: m => m.est || 0, inpow: m => m.inPow || 0, outpow: m => m.outPow || 0,
+    status: m => (isU(m.name) ? 2 : 0) + (isV(m.name) ? 1 : 0) + (available(m.name) ? .5 : 0)
+  }[mf.sort];
+  list.sort((a, b) => { const x = key(a), y = key(b); return (x > y ? 1 : x < y ? -1 : 0) * mf.dir; });
+  const th = (k, label) => `<th data-sort="${k}" aria-sort="${mf.sort === k ? (mf.dir > 0 ? "ascending" : "descending") : "none"}" scope="col">${label}</th>`;
+  const rows = list.map(m => {
+    const n = m.name, u = isU(n), v = isV(n), a = available(n);
+    const ic = iconFor(n);
+    const src = (m.sources || []).length ? (m.sources || []).slice(0, 6).map(moonChip).join("") + ((m.sources.length > 6) ? `<span class="chip l">+${m.sources.length - 6}</span>` : "") : (m.default ? `<span class="chip u">Unlocked by default</span>` : (m.vanilla ? `<span class="chip l">Buy route in terminal</span>` : `<span class="chip l">See page</span>`));
+    const ext = m.slug ? "" : ' target="_blank" rel="noopener"';
+    return `<tr class="${u ? "is-u" : a ? "is-a" : ""}">
+      <td><div style="display:flex;gap:4px"><button class="toggle tu" aria-pressed="${u}" data-u="${esc(n)}" title="Unlocked">${u ? "Unlocked" : "Locked"}</button><button class="toggle tv" aria-pressed="${v}" data-v="${esc(n)}" title="Visited">${v ? "Visited" : "Not yet"}</button></div></td>
+      <td><div class="nm">${ic ? `<img src="${esc(ic)}" alt="" loading="lazy">` : ""}<a href="${esc(moonLink(n))}"${ext}>${esc(n)}</a>${m.vanilla ? '<span class="vtag">vanilla</span>' : ""}${a ? '<span class="tag g">reachable</span>' : ""}</div></td>
+      <td class="n">${m.num ?? ""}</td>
+      <td class="n">${m.price ? "▮" + m.price : "Free"}</td>
+      <td>${hzPill(m.hazard)}</td>
+      <td class="n">${m.scrap && m.scrap[1] != null ? `${m.scrap[0]}–${m.scrap[1]}` : "–"}</td>
+      <td class="n">${m.est ? "~" + m.est : "–"}</td>
+      <td class="n">${m.inPow ?? "–"} / ${m.outPow ?? "–"}</td>
+      <td style="font-size:13px">${esc((m.interiors || []).slice(0, 1).map(x => x[0]).join(""))}</td>
+      <td><div class="src">${src}</div></td></tr>`;
+  }).join("");
+  const seg = (k, l) => `<button aria-pressed="${mf.show === k}" data-show="${k}">${l}</button>`;
+  $("#v-moons").innerHTML = `
+    <div class="filters">
+      <h1 style="font-size:24px;margin-right:12px">Moons</h1>
+      <div class="seg" role="group" aria-label="Filter moons">${seg("all","All")}${seg("unlocked","Unlocked")}${seg("available","Reachable")}${seg("locked","Locked")}</div>
+      <label><input type="checkbox" id="vanilla" ${mf.vanilla ? "checked" : ""}> Include vanilla moons</label>
+      <span style="margin-left:auto;font-size:12px;color:var(--muted)">Default order: easiest hazard first, then cheapest. Click a column to sort.</span>
+    </div>
+    <div class="tablewrap"><table class="moons">
+      <thead><tr>${th("status","Status")}${th("name","Moon")}${th("num","#")}${th("price","Cost")}${th("hazard","Hazard")}${th("scrap","Scrap")}${th("est","Est. loot")}${th("inpow","Power in/out")}<th scope="col">Main interior</th><th scope="col">How to reach (unlocked from)</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+  $$("#v-moons [data-show]").forEach(b => b.onclick = () => { mf.show = b.dataset.show; renderMoons(); });
+  $("#vanilla").onchange = e => { mf.vanilla = e.target.checked; renderMoons(); };
+  $$("#v-moons th[data-sort]").forEach(t => t.onclick = () => { const k = t.dataset.sort; if (mf.sort === k) mf.dir *= -1; else { mf.sort = k; mf.dir = (k === "est" || k === "status") ? -1 : 1; } renderMoons(); });
+  $$("#v-moons [data-u]").forEach(b => b.onclick = () => setU(b.dataset.u, !isU(b.dataset.u)));
+  $$("#v-moons [data-v]").forEach(b => b.onclick = () => setV(b.dataset.v, !isV(b.dataset.v)));
+}
+
+/* ---------- list pages ---------- */
+function renderList(kind){
+  const k = {interiors:"interior", entities:"entity", guides:"guide"}[kind];
+  const titles = {interiors:"Interiors", entities:"Entities (Wesley's Enemy Variants & mod creatures)", guides:"Guides & item lists"}[kind];
+  const intro = {interiors:"Building layouts used across the mod's moons, with their hazards, puzzles and rewards.", entities:"Creatures added by the mod. Vanilla enemies are on the Lethal Company Wiki.", guides:"The wiki's guidebook, endings, full item tables, weather and story pages."}[kind];
+  const big = k !== "guide";
+  const cards = NAV[k].map(([t, s]) => {
+    const im = big ? bigPreview(s) : previewFor(s);
+    const ic = k === "interior" && window.INTICONS ? INTICONS[t] : null;
+    if (!big) return `<a class="card" href="#${s}">${im ? `<img src="${esc(im)}" alt="" loading="lazy">` : `<img alt="">`}<span><b>${esc(t)}</b><small>${esc((PLAIN[s] || "").slice(0, 90))}…</small></span></a>`;
+    return `<a class="bcard" href="#${s}"><div class="bimg">${im ? `<img src="${esc(im)}" alt="${esc(t)}" loading="lazy">` : ""}${ic && ic !== im ? `<img class="bico" src="${esc(ic)}" alt="">` : ""}</div><div class="btxt"><b>${esc(t)}</b><small>${esc((PLAIN[s] || "").slice(0, 140))}…</small></div></a>`;
+  }).join("");
+  $("#v-list").innerHTML = `<h1 style="font-size:24px">${esc(titles)}</h1><p style="color:var(--muted);margin:4px 0 14px">${esc(intro)}</p><div class="${big ? "bcards" : "cards"}">${cards}</div>`;
+}
+
+/* ---------- field notes ---------- */
+function renderNotes(){
+  $("#v-notes").innerHTML = `<div class="panel notes">
+  <h2>How progression works</h2>
+  <ul>
+   <li><b>Videotapes</b> go in the projector on Galetry's top floor. The moon on the tape unlocks after the video plays.</li>
+   <li><b>Logs</b> look like cassette players and sit near floodlights, flares, tables and papers. Carry them to a <b>log translator</b> (most mod moons have one; Galetry's is just inside the museum, left). Notes and files found inside buildings are loggable too: they show a special icon when picked up.</li>
+   <li><b>Maps on the ground</b> (Infernis → Atlantica, Atlantica → Lecaro, Lecaro → Thalasso, Thalasso → Utril) are interacted with, not picked up. Wait for the voice or cutscene to finish.</li>
+  </ul>
+  <h2>Getting fired</h2>
+  <ul>
+   <li>You <b>keep every unlocked moon</b>. Lost: credits, scrap and gear (same as vanilla).</li>
+   <li>Fabricator resources (Galetry/Gratar) are kept. Special apparatus in Galetry are only permanent once all three are placed. Triangulation progress for ResearcherxB resets but its countdown does not.</li>
+   <li>Want a do-over? The host can back up <code>%USERPROFILE%\\AppData\\LocalLow\\ZeekerssRBLX\\Lethal Company\\</code> before the final quota day and restore it if things go badly. The QuickRunReload mod (host-only) can also restart a failed landing.</li>
+  </ul>
+  <h2>Moons vanished?</h2>
+  <ul>
+   <li>Unlocks live in the <b>host's</b> save. Same host, same save slot.</li>
+   <li>Non-host players sometimes can't see unlocked moons: check the host's terminal.</li>
+   <li>Use the <b>Failsafe floppy disc</b> under the right-hand counter in Galetry's gift shop (mod v7.0.0+), then translate it. Otherwise re-log the original unlock item (for Junic: Geoffrey's final message on Asteroid-13).</li>
+  </ul>
+  <h2>Money and quota</h2>
+  <ul>
+   <li>Galetry has its own sell desk, so you don't need to route to the Company. Sell on the last day before the deadline.</li>
+   <li>Credits spent on routes don't count against quota: only sold scrap counts. A 500-credit trip to MorvDonalds that returns ~2000 in sauce is a good deal.</li>
+   <li>Avoid Eclipsed, Forsaken, Hallowed (adds Corpse Crawlers) and Minefield weather while learning.</li>
+  </ul>
+  <h2>Threats we've asked about</h2>
+  <ul>
+   <li><b>Coil-Head</b>: can't be killed. Keep it in view (within 60 units, clear line of sight). It stops after ~9 s of chasing for an 11 s cooldown, takes ~17 s to open doors, and stuns from grenades, zap guns and radar boosters.</li>
+   <li><b>Cadaver Growth</b>: only weed killer removes it. Leave the room when "air filter overwhelmed" shows. Infected players are cured by the ship shower before 8% or by a teammate spraying weed killer before 100% (8 damage). At 100% spraying makes them bloom instantly. Blooms die to 4 shovel hits (shotguns barely work).</li>
+   <li><b>Corpse Crawler</b>: unkillable, runs from you, bites for 20 if cornered and vomits Gore Spikes that keep hurting nearby players all day.</li>
+   <li><b>Hanging mines (Oldred)</b>: faster beeping means leave now.</li>
+  </ul>
+  <h2>Endings in one line each</h2>
+  <ul>
+   <li>All endings: repair the abandoned ship on Repress (apparatus, 2 oil barrels, Untampered operating panel) in one visit.</li>
+   <li>Ending 1: take off with no destiny item. Ending 4 (quickest real one): Harrington's research 4 from Utril. Ending 2: three special apparatus → Hyx → Empra. Endings 5 and 6: the Crowd → Release trial chain. Ending 3: Dreck → Core → Faith → Berunah + Cubatres crystal cube.</li>
+   <li>Any ending except 1 unlocks the bonus moon End.</li>
+  </ul>
+  <h2>Share or back up this tracker</h2>
+  <div class="share">
+   <p style="margin:4px 0 8px;font-size:14px">If crew sync is on, everyone with access sees the same ticks. You can also copy a code and paste it on another device.</p>
+   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button class="btn" id="copycode">Copy progress code</button><button class="btn" id="loadcode">Load code from box</button><button class="btn" id="resetcode">Reset tracker</button><label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="spoil" ${document.body.classList.contains("hide-spoilers") ? "checked" : ""}> Blur story spoilers</label></div>
+   <textarea id="code" aria-label="Progress code"></textarea>
+   <p id="codemsg" style="font-size:13px;color:var(--muted);margin:4px 0 0"></p>
+  </div>
+  </div>`;
+  $("#copycode").onclick = async () => { const c = btoa(unescape(encodeURIComponent(JSON.stringify(state)))); $("#code").value = c; try { await navigator.clipboard.writeText(c); $("#codemsg").textContent = "Copied. Paste it into this box on another device and press Load."; } catch(e){ $("#codemsg").textContent = "Copy the code from the box above."; } };
+  $("#loadcode").onclick = () => { try { const s = JSON.parse(decodeURIComponent(escape(atob($("#code").value.trim())))); if (!s.moons) throw 0; state = s; commit(); $("#codemsg").textContent = "Progress loaded."; } catch(e){ $("#codemsg").textContent = "That code didn't work. Copy the whole code and try again."; } };
+  $("#resetcode").onclick = () => { if ($("#resetcode").dataset.armed){ state = {moons:{},found:{},goals:{},t:0}; commit(); $("#codemsg").textContent = "Tracker reset."; delete $("#resetcode").dataset.armed; $("#resetcode").textContent = "Reset tracker"; } else { $("#resetcode").dataset.armed = 1; $("#resetcode").textContent = "Click again to confirm reset"; } };
+  $("#spoil").onchange = e => { document.body.classList.toggle("hide-spoilers", e.target.checked); try { localStorage.setItem("wm-spoil", e.target.checked ? "1" : "0"); } catch(_){} };
+}
+
+/* ---------- page / dossier ---------- */
+function renderStatusBits(slug){
+  const t = P[slug].title; const box = $("#statusbox"); if (!box) return;
+  const u = isU(t), v = isV(t);
+  box.innerHTML = `<button class="toggle tu" aria-pressed="${u}" id="pu">${u ? "✓ Unlocked" : "Mark unlocked"}</button><button class="toggle tv" aria-pressed="${v}" id="pv">${v ? "✓ Visited" : "Mark visited"}</button>${!u && available(t) ? '<span class="tag g">Reachable now</span>' : ""}`;
+  $("#pu").onclick = () => setU(t, !isU(t));
+  $("#pv").onclick = () => setV(t, !isV(t));
+  $$("[data-found]").forEach(c => c.checked = !!state.found?.[c.dataset.found]);
+  $$(".reach [data-srcchip]").forEach(el => el.outerHTML = moonChip(el.dataset.srcchip));
+}
+function renderPage(slug){
+  const pg = P[slug]; const t = pg.title; const m = M[t]; const info = pg.info;
+  const isMoon = pg.kind === "moon";
+  const ims = (info?.images || []).length ? info.images : (bigPreview(slug) ? [{label: "", src: bigPreview(slug)}] : []);
+  const imgTabs = ims.length > 1 ? `<div class="imgtabs">${ims.map((im, i) => `<button aria-pressed="${i === 0}" data-img="${i}">${esc(im.label || "Image " + (i + 1))}</button>`).join("")}</div>` : "";
+  let facts = "";
+  if (isMoon && m){
+    facts = `<dl class="facts">
+      <dt>Cost</dt><dd>${m.price ? "▮" + m.price : "Free"}</dd>
+      <dt>Hazard</dt><dd>${hzPill(m.hazard)}</dd>
+      <dt>Scrap</dt><dd>${m.scrap?.[1] != null ? m.scrap[0] + "–" + m.scrap[1] : "–"}${m.avgItem ? ` · avg item ~${m.avgItem}` : ""}</dd>
+      <dt>Est. loot/day</dt><dd>${m.est ? "~" + m.est : "–"}</dd>
+      <dt>Power</dt><dd>in ${m.inPow ?? "–"} · out ${m.outPow ?? "–"} · day ${m.dayPow ?? "–"}</dd>
+      <dt>Interior size</dt><dd>${esc(m.size || "–")}</dd>
+      <dt>Interiors</dt><dd>${(m.interiors || []).length ? intTiles(m.interiors) : "–"}</dd>
+      <dt>Indoor</dt><dd>${esc(m.indoor || "–")}</dd>
+      <dt>Outdoor</dt><dd>${esc(m.outdoor || "–")}</dd>
+      <dt>Weather</dt><dd>${esc(m.weather || "–")}</dd>
+      <dt>Cruiser</dt><dd>${esc(m.cruiser || "–")}</dd></dl>`;
+  } else if (info && info.rows.length){
+    facts = `<dl class="facts">${info.rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join("")}</dl>`;
+  }
+  const toc = pg.sections.filter(s => s.h).map((s, i) => `<a class="l${s.lvl}" href="#${slug}" data-jump="sec-${i}">${esc(s.h)}</a>`).join("");
+  const tips = guideHazards(t, isMoon ? m : null, false);
+  let reach = "";
+  if (isMoon && m){
+    const srcRows = grouped(incoming(t), x => `<div class="row"><span data-srcchip="${esc(x.src)}"></span><div>${esc(x.how || "See the source moon's page.")}</div></div>`)
+      || (m.unlockedByHtml ? `<div class="wiki" style="padding:0;border:0;background:none">${m.unlockedByHtml}</div>` : `<p>${m.default ? "Unlocked by default." : "See below."}</p>`);
+    const outRows = grouped(outgoing(t), x => `<div class="row"><label><input type="checkbox" data-found="${esc(t + ">" + x.to)}"><a class="mn" href="${esc(moonLink(x.to))}">${esc(x.to)}</a></label><div>${esc(x.how)}</div></div>`);
+    reach = `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+      <div class="panel reach"><h2 style="font-size:17px;margin-bottom:8px">How to get here</h2><div class="how">${srcRows}</div></div>
+      <div class="panel reach"><h2 style="font-size:17px;margin-bottom:8px">Unlocks from here</h2><div class="how">${outRows || "<p>This moon doesn't unlock other moons.</p>"}</div><p style="font-size:12px;color:var(--muted);margin:8px 0 0">Tick an item once you've collected or triggered it.</p></div></div>`;
+  }
+  const mapHtml = MAPS[t] ? mapBlock(t) : "";
+  const secs = pg.sections.map((s, i) => {
+    let body = s.html;
+    if (isMoon && /^(unlocked by|unlocks|progression)$/i.test(s.h)) body = body; // keep wiki text too
+    const hd = s.h ? `<h${Math.min(4, s.lvl)} class="sec" id="sec-${i}">${esc(s.h)}</h${Math.min(4, s.lvl)}>` : "";
+    return `<section>${hd}${body}</section>`;
+  }).join("");
+  $("#v-page").innerHTML = `
+    <div class="crumbs"><a href="#${isMoon ? "moons" : ({interior:"interiors",entity:"entities",guide:"guides"}[pg.kind])}">${isMoon ? "Moons" : ({interior:"Interiors",entity:"Entities",guide:"Guides"}[pg.kind])}</a> / ${esc(t)} · <a href="https://wesleysmoons.wiki.gg/wiki/${encodeURIComponent(t.replace(/ /g, "_"))}" target="_blank" rel="noopener">Open on the wiki</a></div>
+    <div class="dossier">
+      <aside class="rail">
+        <div class="panel">
+          ${m?.num ? `<div class="num">Moon ${m.num}${m.vanilla ? " · vanilla" : ""}</div>` : ""}
+          <h1>${esc(t)}</h1>
+          ${isMoon ? `<div class="status-row" id="statusbox"></div>` : ""}
+          ${imgTabs}
+          ${ims.length ? `<img class="main-img" id="mainimg" src="${esc(ims[0].src)}" alt="${esc(t)}">` : ""}
+          ${facts}
+        </div>
+        ${toc ? `<div class="panel"><div class="eyebrow" style="margin-bottom:6px">On this page</div><nav class="toc">${toc}</nav></div>` : ""}
+      </aside>
+      <div class="content">
+        ${tips}${reach}${mapHtml}
+        <article class="wiki">${secs}</article>
+      </div>
+    </div>`;
+  if (isMoon) renderStatusBits(slug);
+  $$("#v-page [data-img]").forEach(b => b.onclick = () => { $$("#v-page [data-img]").forEach(x => x.setAttribute("aria-pressed", "false")); b.setAttribute("aria-pressed", "true"); $("#mainimg").src = ims[+b.dataset.img].src; });
+  $$("#v-page [data-jump]").forEach(a => a.onclick = e => { e.preventDefault(); const el = document.getElementById(a.dataset.jump); if (el) el.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block:"start"}); });
+  $$("#v-page [data-found]").forEach(c => c.onchange = () => { state.found = state.found || {}; state.found[c.dataset.found] = c.checked ? 1 : 0; commit(); });
+  enhanceWiki($("#v-page .wiki"));
+  if (MAPS[t]) wireMap(t);
+}
+
+/* ---------- wiki enhancements ---------- */
+function enhanceWiki(root){
+  if (!root) return;
+  $$("table.wikitable", root).forEach(tb => {
+    if (!tb.parentElement.classList.contains("tw")){ const w = document.createElement("div"); w.className = "tw"; tb.before(w); w.appendChild(tb); }
+    const rows = $$("tr", tb).filter(r => r.querySelector("td"));
+    if (rows.length > 12){
+      const inp = document.createElement("input"); inp.type = "search"; inp.className = "tf"; inp.placeholder = `Filter ${rows.length} rows…`; inp.setAttribute("aria-label", "Filter table rows");
+      tb.parentElement.before(inp);
+      inp.oninput = () => { const q = inp.value.toLowerCase(); rows.forEach(r => r.style.display = r.textContent.toLowerCase().includes(q) ? "" : "none"); };
+    }
+    const head = $$("tr", tb).find(r => !r.querySelector("td") && r.querySelectorAll("th").length > 1);
+    if (head) $$("th", head).forEach((th, ci) => { th.title = "Sort"; th.onclick = () => sortTable(tb, head, ci); });
+  });
+  linkItems(root);
+  $$("img", root).forEach(im => im.addEventListener("click", () => openLb(im.src, im.closest("figure")?.querySelector("figcaption")?.textContent || im.alt)));
+  $$(".spoiler", root).forEach(sp => sp.addEventListener("click", () => sp.classList.add("shown")));
+}
+function sortTable(tb, head, ci){
+  const body = head.parentElement;
+  const rows = $$("tr", body).filter(r => r !== head && r.querySelector("td"));
+  const dir = head.dataset.sc == ci && head.dataset.sd === "1" ? -1 : 1;
+  head.dataset.sc = ci; head.dataset.sd = dir === 1 ? "1" : "-1";
+  const val = r => { const c = r.children[ci]; const s = c ? c.textContent.trim() : ""; const n = parseFloat(s.replace(/[^\d.-]/g, "")); return isNaN(n) || /[a-z]{3,}/i.test(s.replace(/lbs?|%/g, "")) && isNaN(parseFloat(s)) ? s.toLowerCase() : n; };
+  rows.sort((a, b) => { const x = val(a), y = val(b); if (typeof x === typeof y) return (x > y ? 1 : x < y ? -1 : 0) * dir; return (typeof x === "number" ? -1 : 1) * dir; });
+  rows.forEach(r => body.appendChild(r));
+}
+function openLb(src, cap){ $("#lbimg").src = src; $("#lbimg").alt = cap || ""; $("#lbcap").textContent = cap || ""; $("#lb").classList.add("on"); $("#lbclose").focus(); }
+$("#lbclose").onclick = () => $("#lb").classList.remove("on");
+$("#lb").onclick = e => { if (e.target.id === "lb") $("#lb").classList.remove("on"); };
+document.addEventListener("keydown", e => { if (e.key === "Escape") { $("#lb").classList.remove("on"); $("#results").classList.remove("show"); } });
+
+/* ---------- maps ---------- */
+let mapState = {};
+function mapBlock(t){
+  const mp = MAPS[t];
+  const bgBtns = mp.bgs.length > 1 ? `<div class="seg filters" style="margin:0"><div class="seg">${mp.bgs.map((b, i) => `<button aria-pressed="${i === 0}" data-bg="${i}">${esc(b.name)}</button>`).join("")}</div></div>` : "";
+  const legend = Object.entries(mp.groups).filter(([g]) => mp.marks.some(k => k.g === g)).map(([g, gr]) => `<label><input type="checkbox" checked data-grp="${esc(g)}">${gr.icon ? `<img src="${esc(gr.icon)}" alt="">` : `<span class="sw" style="background:${esc(gr.color)}"></span>`}${esc(gr.name)}</label>`).join("");
+  const marks = mp.marks.map((k, i) => { const gr = mp.groups[k.g] || {}; return `<button class="mk ${gr.icon ? "" : "dot"}" data-mk="${i}" data-g="${esc(k.g)}" style="left:${k.x}%;top:${k.y}%;${gr.icon ? "" : "background:" + esc(gr.color)}" title="${esc(k.n)}" aria-label="${esc(k.n)}" aria-pressed="false">${gr.icon ? `<img src="${esc(gr.icon)}" alt="">` : ""}</button>`; }).join("");
+  return `<div class="mapbox"><div class="mapbar"><h2>Map</h2>${bgBtns}<button class="btn" data-zoom="-1" aria-label="Zoom out">−</button><button class="btn" data-zoom="1" aria-label="Zoom in">+</button></div>
+   <div class="mapscroll"><div class="mapinner" id="mapinner"><img class="bg" id="mapbg" src="${esc(mp.bgs[0].src)}" alt="Top-down map of ${esc(t)}">${marks}</div></div>
+   <div class="legend">${legend}</div><div class="mapinfo" id="mapinfo">Click a marker for details. Map and markers from the wiki's interactive map.</div></div>`;
+}
+function wireMap(t){
+  const mp = MAPS[t]; let z = 1;
+  $$("[data-bg]").forEach(b => b.onclick = () => { $$("[data-bg]").forEach(x => x.setAttribute("aria-pressed", "false")); b.setAttribute("aria-pressed", "true"); $("#mapbg").src = mp.bgs[+b.dataset.bg].src; });
+  $$("[data-zoom]").forEach(b => b.onclick = () => { z = Math.max(1, Math.min(4, z + (+b.dataset.zoom) * .5)); $("#mapinner").style.width = (z * 100) + "%"; });
+  $$("[data-grp]").forEach(c => c.onchange = () => $$(`.mk[data-g="${CSS.escape(c.dataset.grp)}"]`).forEach(m => m.style.display = c.checked ? "" : "none"));
+  $$(".mk").forEach(b => b.onclick = () => { $$(".mk").forEach(x => x.setAttribute("aria-pressed", "false")); b.setAttribute("aria-pressed", "true"); const k = mp.marks[+b.dataset.mk]; const gr = mp.groups[k.g] || {}; $("#mapinfo").innerHTML = `<b>${esc(k.n)}</b> <span class="chip">${esc(gr.name || k.g)}</span>${k.d ? `<br>${esc(k.d)}` : ""}`; });
+  $("#mapbg").onclick = null;
+}
+
+/* ---------- search ---------- */
+function wireSearch(){
+  const q = $("#q"), res = $("#results");
+  const idx = Object.entries(P).map(([s, p]) => ({s, t: p.title, k: p.kind, tl: p.title.toLowerCase(), body: (PLAIN[s] || "").toLowerCase(), raw: PLAIN[s] || ""}));
+  q.oninput = () => {
+    const v = q.value.trim().toLowerCase();
+    if (v.length < 2){ res.classList.remove("show"); return; }
+    const hits = [];
+    for (const it of idx){
+      let score = 0, snip = "";
+      if (it.tl === v) score = 100; else if (it.tl.startsWith(v)) score = 60; else if (it.tl.includes(v)) score = 40;
+      const bi = it.body.indexOf(v);
+      if (bi >= 0){ score += 10 + Math.min(10, it.body.split(v).length); snip = it.raw.slice(Math.max(0, bi - 50), bi + 90); }
+      if (score) hits.push({...it, score, snip});
+    }
+    hits.sort((a, b) => b.score - a.score);
+    res.innerHTML = hits.slice(0, 25).map(h => `<a href="#${h.s}"><span class="k">${h.k}</span>${esc(h.t)}${h.snip ? `<small>…${esc(h.snip)}…</small>` : ""}</a>`).join("") || `<a href="#home"><small>No matches for “${esc(q.value)}”.</small></a>`;
+    res.classList.add("show");
+  };
+  res.onclick = () => { res.classList.remove("show"); q.value = ""; };
+  document.addEventListener("click", e => { if (!e.target.closest(".search")) res.classList.remove("show"); });
+}
+
+/* ---------- boot ---------- */
+(async function boot(){
+  try { if (localStorage.getItem("wm-spoil") === "1") document.body.classList.add("hide-spoilers"); } catch(e){}
+  try {
+    const [pj, mj] = await Promise.all([fetch("data/pages.json").then(r => r.json()), fetch("data/moons.json").then(r => r.json())]);
+    P = pj.pages; PLAIN = pj.plain; NAV = pj.nav; M = mj.moons; MAPS = mj.maps; window.ICONS = mj.icons || {}; window.INTICONS = mj.intIcons || {}; window.ITEMS = mj.items || {};
+  } catch(e){
+    $("#loading").textContent = "The guide's data didn't load. Reload the page to try again."; return;
+  }
+  $("#loading").remove();
+  wireSearch();
+  window.addEventListener("hashchange", route);
+  document.addEventListener("fullscreenchange", () => { const fb = $("#tfull"); if (fb) fb.textContent = document.fullscreenElement ? "Exit full screen" : "⛶ Full screen"; });
+  window.addEventListener("resize", () => { document.documentElement.style.setProperty("--top", ($(".top").offsetHeight || 62) + "px"); document.documentElement.style.setProperty("--navh", ($(".top").offsetHeight || 52) + "px"); });
+  route();
+  initDb();
+})();
+</script>
+</body>
+</html>

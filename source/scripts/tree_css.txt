@@ -1,0 +1,41 @@
+/* progression tree: a fixed dark "space" world regardless of theme */
+.tree{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;background:#07080c}
+@media (max-width:1000px){.tree{grid-template-columns:1fr}}
+.tree-stage{position:relative;min-height:420px;height:min(76vh,860px);touch-action:none;cursor:grab;user-select:none}
+.tree-stage.drag{cursor:grabbing}
+.tree-stage svg{display:block;width:100%;height:100%}
+.tree-tools{position:absolute;top:10px;left:10px;display:flex;flex-wrap:wrap;gap:6px;z-index:2}
+.tree-tools button,.tree-tools label{font:600 12px var(--font-display);background:rgba(20,22,30,.85);color:#e9e4d8;border:1px solid #3a3f4c;border-radius:5px;padding:5px 9px;cursor:pointer;display:flex;gap:5px;align-items:center}
+.tree-legend{position:absolute;bottom:10px;left:10px;display:flex;flex-wrap:wrap;gap:6px 14px;z-index:2;font:500 11px var(--font-mono);color:#cfcabd;background:rgba(10,11,16,.8);border:1px solid #2c303b;border-radius:5px;padding:6px 10px;max-width:calc(100% - 20px)}
+.tree-legend span{display:flex;align-items:center;gap:5px}
+.tree-legend i{width:12px;height:12px;border-radius:50%;display:inline-block;border:2px solid}
+.tree-credit{position:absolute;top:12px;right:12px;font:500 10px var(--font-mono);color:#7d7a72;z-index:2;text-align:right;max-width:260px}
+.tree-side{background:var(--panel);border-left:1px solid var(--line);padding:16px;overflow:auto;max-height:min(76vh,860px)}
+@media (max-width:1000px){.tree-side{border-left:0;border-top:1px solid var(--line);max-height:none}}
+.tree-side h2{font-size:22px;margin:2px 0 6px}
+.tree-side .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.tree-side h3{font:500 11px var(--font-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:14px 0 6px}
+.tree-side .way{border-top:1px solid var(--line);padding:7px 0;font-size:13.5px}
+.tree-side .way:first-of-type{border-top:0}
+.tree-side .way b{font-family:var(--font-display)}
+.tree-side .tip{font-size:13.5px;margin:0;padding-left:18px}
+.tree-side .tip li{margin:3px 0}
+svg .node{cursor:pointer}
+svg .node text{font:700 15px "Chakra Petch",system-ui,sans-serif;paint-order:stroke;stroke:#07080c;stroke-width:4px;stroke-linejoin:round}
+svg .node .ring{fill:none;stroke-width:4}
+svg .node.locked image{opacity:.38;filter:grayscale(1)}
+svg .node.reach .ring{stroke:#f0a23a;stroke-dasharray:6 4}
+svg .node.unl .ring{stroke:#5cc28a}
+svg .node.vis .ring{stroke:#f0a23a}
+svg .node.locked .ring{stroke:#3a3f4a}
+svg .node .halo{fill:none;stroke:#fff;stroke-width:2;opacity:0}
+svg .node.sel .halo{opacity:1}
+svg .node:hover .halo,svg .node:focus .halo{opacity:.7}
+svg .node:focus{outline:none}
+svg .edge{fill:none;stroke-width:3;opacity:.9}
+svg .edge.dim{opacity:.12}
+svg .edge.alt{stroke-width:1.6;stroke-dasharray:4 5;opacity:.55}
+svg .edge.hl{opacity:1;stroke-width:4}
+svg .edge.special{stroke-dasharray:3 7;stroke-linecap:round}
+@media (prefers-reduced-motion: no-preference){svg .node.reach .ring{animation:dash 1.2s linear infinite}}
+@keyframes dash{to{stroke-dashoffset:-20}}

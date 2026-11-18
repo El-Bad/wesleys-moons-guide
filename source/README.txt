@@ -1,0 +1,12 @@
+Wesley's Moons Field Guide - build kit
+
+Main file to share: ..\Wesleys-Moons-Field-Guide.html (single file, images embedded)
+
+Layout (scripts expect this folder as their base, S):
+  dump/      raw wikitext of both wikis
+  parsed/    rendered HTML of every Wesley's Moons wiki page
+  build/     index.html (page template), data/*.json, img/ (full-quality images), imgmap.json
+  scripts/   build.py (pages + moons) -> build_items.py (items) -> post_build.py (merge) -> package_share.py (single file)
+
+Rebuild the single file:
+  python -X utf8 scripts/package_share.py build ../Wesleys-Moons-Field-Guide.html 420 1100 50
