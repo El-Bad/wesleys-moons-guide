@@ -51,7 +51,11 @@ def rows(sec):
             nm0 = strip(re.split(r'\|\|', r)[0]).lower()
             PREV.setdefault(nm0, pm.group(1).strip())
         r = r.split('\n|}')[0]
-        c = [x.strip() for x in re.split(r'\|\|', r)]
+        c = []
+        for x in re.split(r'\|\|', r):
+            x = x.strip()
+            m = re.match(r'colspan\s*=\s*"?(\d+)"?\s*\|\s*(.*)$', x, re.S)
+            c.extend([m.group(2).strip()] * int(m.group(1)) if m else [x])
         out.append(c)
     return out
 def val(c, i):
@@ -61,8 +65,8 @@ def val(c, i):
 for c in rows(section("Wesley's Scrap")):
     if len(c) < 8: continue
     mn, av, mx = val(c, 4), val(c, 5), val(c, 6)
-    add(c[0], 'Scrap', f'Scrap to sell (about {av} credits, range {mn}–{mx}). No special use listed on the wiki.',
-        v=f'{mn}–{mx}', w=val(c, 3), two=val(c, 7), where=val(c, 8))
+    add(c[0], 'Scrap', (f'Scrap to sell (always worth {mn} credit{"s" if mn != "1" else ""}).' if mn == mx else f'Scrap to sell (about {av} credits, range {mn}–{mx}).') + ' No special use listed on the wiki.',
+        v=(mn if mn == mx else f'{mn}–{mx}'), w=val(c, 3), two=val(c, 7), where=val(c, 8))
 for c in rows(section('Loggable Items')):
     if len(c) < 8: continue
     un = val(c, 7)

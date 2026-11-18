@@ -6,7 +6,7 @@ Layout (scripts expect this folder as their base, S):
   dump/      raw wikitext of both wikis
   parsed/    rendered HTML of every Wesley's Moons wiki page
   build/     index.html (page template), data/*.json, img/ (full-quality images), imgmap.json
-  scripts/   build.py (pages + moons) -> build_items.py (items) -> post_build.py (merge) -> build_vanilla_ents.py + build_vanilla_loot.py (vanilla creatures, vanilla est. loot; fetch from the Lethal wiki) -> package_share.py (single file)
+  scripts/   build.py (pages + moons) -> build_items.py (items) -> post_build.py (merge) -> build_vanilla_ents.py + build_vanilla_loot.py + build_vanilla_ints.py + build_lore.py (vanilla creatures, vanilla est. loot; fetch from the Lethal wiki) -> package_share.py (single file)
   mod*.py were one-off patches to build/index.html; they are already applied.
 
 Rebuild the single file:
