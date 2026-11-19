@@ -4,7 +4,9 @@ An interactive, single-file field guide for the Lethal Company mod **Wesley's Mo
 
 **Live page:** https://el-bad.github.io/wesleys-moons-guide/
 
-[![Moon map with unlock tracker](screenshot.png)](https://el-bad.github.io/wesleys-moons-guide/)
+[![Moon map with a moon selected](screenshot.png)](https://el-bad.github.io/wesleys-moons-guide/)
+
+[![Progress page: unlock tracker, goals checklist and next unlocks](screenshot-progress.png)](https://el-bad.github.io/wesleys-moons-guide/#progress)
 
 The whole guide is one HTML file (`Wesleys-Moons-Field-Guide.html`) with images embedded, so it also works offline. Progress is saved in your browser.
 
