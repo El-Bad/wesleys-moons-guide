@@ -455,6 +455,22 @@ svg .node.locked .tinfo{opacity:.75}
 .lmoon .lbody details>summary{cursor:pointer;color:var(--muted);font-size:13px}
 .lmoon.flash{outline:2px solid var(--accent)}
 
+
+.recipe{margin-top:6px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.recipe .rh{font:600 11px var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:3px}
+.recipe ul{margin:2px 0 0;padding-left:18px}
+.recipe li{margin:2px 0}
+.recipe .rs{color:var(--muted);font-size:12.5px;display:inline}
+.recipe .rf{color:var(--muted);font-size:12.5px;margin:1px 0 3px}
+.craftguide .rs{color:var(--muted)}
+.recipe .chip{font-size:11.5px;padding:0 5px}
+.craftguide{margin:0 0 12px}
+.craftguide h2{font-size:17px;margin:0 0 6px}
+.craftguide h3{font:600 12px var(--font-mono);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 4px;color:var(--accent)}
+.craftguide table{width:100%;border-collapse:collapse;font-size:13px}
+.craftguide td,.craftguide th{border-top:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
+.craftguide th{font:600 11px var(--font-mono);text-transform:uppercase;color:var(--muted)}
+
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -1131,23 +1147,68 @@ document.addEventListener("click", e => {
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape") { const p = $("#pop"); if (p) p.hidden = true; } });
 
+
+/* ---------- crafting ---------- */
+const STATION = {
+  Gratar: "Gratar: the fabricator through the blue fire exit next to the main entrance",
+  Galetry: "Galetry: the fabricator behind the locked door in the fire exit left of the ship (open it with a Fabricated key made on Gratar)"
+};
+const RECIPE_ALIAS = {"untampered operating panel": "operating panel"};
+function recipeFor(x){
+  const C = window.CRAFT; if (!C) return null;
+  const k = RECIPE_ALIAS[x.n.toLowerCase()] || x.n.toLowerCase();
+  return C.recipes.find(r => r.n.toLowerCase() === k) || null;
+}
+function locHtml(l){ const m = l.match(/^(.*?):\s*(.*)$/); if (!m) return esc(l); const n = m[1].trim(); return (M[n] ? moonChip(n) : `<b>${esc(n)}</b>`) + " " + esc(m[2]); }
+function matLine(q, res){
+  const I = (window.CRAFT.ing[res] || []); const small = I.find(i => !i.two) || I[0]; const big = I.find(i => i !== small);
+  if (!small) return `<li><b>${q} ${esc(res)}</b></li>`;
+  const k = Math.ceil(q / small.gives);
+  return `<li><b>${q} ${esc(res)}</b> = ${k}× ${esc(small.n)} <span class="rs">(${small.gives} each, ${esc(small.w)} lb)</span>${big ? ` <span class="rs">or ${Math.ceil(q / big.gives)}× ${esc(big.n)} (${big.gives} each${big.two ? ", two-handed" : ""})</span>` : ""}
+    <div class="rf">Find it on: ${small.locs.slice(0, 5).map(locHtml).join(", ")}${big ? `; ${esc(big.n)}: ${big.locs.map(locHtml).join(", ")}` : ""}</div></li>`;
+}
+function recipeHtml(r){
+  return `<div class="recipe"><div class="rh">Recipe${r.yield > 1 ? ` · makes ${r.yield}` : ""}</div>
+    <div><b>Craft at:</b> ${r.at.length === 1 ? `<b>${esc(r.at[0])} only</b> <span class="rs">(${esc(STATION[r.at[0]].split(": ")[1])})</span>` : `Gratar or Galetry fabricator <span class="rs">(see "How crafting works" above the list)</span>`}</div>
+    <ul>${r.cost.map(([q, res]) => matLine(q, res)).join("")}</ul></div>`;
+}
+function ingredientHtml(x){
+  const C = window.CRAFT; if (!C) return "";
+  const res = C.res.find(r => (C.ing[r] || []).some(i => i.n.toLowerCase() === x.n.toLowerCase())); if (!res) return "";
+  const uses = C.recipes.filter(r => r.cost.some(([q, n]) => n === res)).map(r => r.n);
+  return `<div class="recipe"><div class="rh">Material: ${esc(res)}</div><div class="rf">Used in: ${uses.map(esc).join(", ")}</div></div>`;
+}
+function craftGuide(){
+  const C = window.CRAFT; if (!C) return "";
+  return `<div class="callout craftguide"><h2>How crafting works</h2><ul>
+    <li><b>Ingredient items</b> are scrap you put into a fabricator instead of selling. Each one adds resources (for example 1 Plastic stock item = 7 Plastic stock).</li>
+    <li>There are two fabricators. <b>${esc(STATION.Gratar)}</b>. <b>${esc(STATION.Galetry)}</b>.</li>
+    <li>Both machines share one resource pool, and resources stay saved even after you get fired. You can deposit on Gratar and craft on Galetry.</li>
+    <li>Gratar is the only place to craft the <b>Operating panel</b>; Galetry is the only place for the <b>Blank floppy disc</b>. Everything else works at both.</li>
+    <li>Gratar unlocks from the Gratar videotape (into Galetry's projector) or by logging Cunningham's visit.</li></ul>
+    <h3>Where to find each material</h3>
+    <table><thead><tr><th>Resource</th><th>Ingredient item</th><th>Best moons</th></tr></thead><tbody>${C.res.map(r => (C.ing[r] || []).map((i, k) => `<tr>${k ? "" : `<td rowspan="${C.ing[r].length}"><b>${esc(r)}</b></td>`}<td>${esc(i.n)} <span class="rs">→ ${i.gives} · ${esc(i.w)} lb${i.two ? " · two-handed" : ""}</span></td><td>${i.locs.slice(0, 6).map(locHtml).join(", ")}</td></tr>`).join("")).join("")}</tbody></table>
+    <h3>Floppy disc machines (put a Blank floppy disc in, log the disc you get)</h3>
+    <table><thead><tr><th>Machine on</th><th>Where</th><th>Unlocks</th></tr></thead><tbody>${C.floppy.map(([a, w, b]) => `<tr><td>${moonChip(a)}</td><td>${esc(w)}</td><td>${moonChip(b)}</td></tr>`).join("")}</tbody></table></div>`;
+}
+
 let itemFilter = {q: "", t: "useful"};
 function renderItems(){
   const I = Object.values(window.ITEMS || {});
   const types = [...new Set(I.map(x => x.t))];
   const useful = x => x.t !== "Scrap" && x.t !== "Reward" && x.t !== "Action figure";
-  const list = I.filter(x => itemFilter.t === "all" ? true : itemFilter.t === "useful" ? useful(x) : x.t === itemFilter.t)
+  const list = I.filter(x => itemFilter.t === "all" ? true : itemFilter.t === "useful" ? useful(x) : itemFilter.t === "Craftable" ? (x.t === "Craftable" || !!recipeFor(x)) : x.t === itemFilter.t)
     .filter(x => !itemFilter.q || (x.n + " " + x.d + " " + (x.where || "")).toLowerCase().includes(itemFilter.q))
     .sort((a, b) => a.t.localeCompare(b.t) || a.n.localeCompare(b.n));
   const chip = (k, l) => `<button aria-pressed="${itemFilter.t === k}" data-it="${esc(k)}">${esc(l)}</button>`;
   let cur = "";
   const rows = list.map(x => { const head = x.t !== cur ? `<tr class="grp"><th colspan="5">${esc(x.t)}</th></tr>` : ""; cur = x.t;
-    return `${head}<tr><td class="ithumb">${x.img ? `<img src="${esc(x.img)}" alt="" loading="lazy">` : ""}</td><td><b>${esc(x.n)}</b></td><td>${esc(x.d)}${x.link ? ` <a href="${esc(x.link)}" target="_blank" rel="noopener">wiki</a>` : ""}</td><td class="n">${esc(x.v || "")}</td><td class="n">${x.w ? esc(x.w) + " lb" : ""}</td></tr>`; }).join("");
+    return `${head}<tr><td class="ithumb">${x.img ? `<img src="${esc(x.img)}" alt="" loading="lazy">` : ""}</td><td><b>${esc(x.n)}</b></td><td>${(() => { const r = recipeFor(x); const d = r ? x.d.replace(/\s*Recipe:.*$/, "").replace(/\s*\(\d+ Plastic stock[^)]*\)/, "") : x.d; return esc(d || r.use) + (x.link ? ` <a href="${esc(x.link)}" target="_blank" rel="noopener">wiki</a>` : "") + (r ? recipeHtml(r) : x.t === "Ingredient" ? ingredientHtml(x) : ""); })()}</td><td class="n">${esc(x.v || "")}</td><td class="n">${x.w ? esc(x.w) + " lb" : ""}</td></tr>`; }).join("");
   $("#v-items").innerHTML = `<div class="filters"><h1 style="font-size:22px;margin-right:8px">Items</h1>
     <input type="search" id="iq" class="tf" style="margin:0;width:min(280px,100%)" placeholder="Search items…" value="${esc(itemFilter.q)}" aria-label="Search items">
     <div class="seg" role="group" aria-label="Item type">${chip("useful", "Usable & special")}${chip("all", "All")}${types.sort().map(t => chip(t, t)).join("")}</div></div>
-    <p style="margin:0 0 8px;font-size:13px;color:var(--muted)">${list.length} items. Most of Wesley's regular scrap has no use besides selling. Descriptions come from the Wesley's Moons and Lethal Company wikis, plus notes from your questions.</p>
-    <div class="tablewrap"><table class="moons items"><thead><tr><th aria-label="Picture"></th><th>Item</th><th>What it does</th><th>Value</th><th>Weight</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    <p style="margin:0 0 8px;font-size:13px;color:var(--muted)">${list.length} items. Most of Wesley's regular scrap has no use besides selling. Descriptions come from the Wesley's Moons and Lethal Company wikis, plus notes from your questions. Pick <b>Craftable</b> for recipes, where to craft and where to find each material.</p>
+    ${itemFilter.t === "Craftable" || itemFilter.t === "Ingredient" ? craftGuide() : ""}<div class="tablewrap"><table class="moons items"><thead><tr><th aria-label="Picture"></th><th>Item</th><th>What it does</th><th>Value</th><th>Weight</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   const q = $("#iq"); q.oninput = () => { itemFilter.q = q.value.toLowerCase(); const pos = q.selectionStart; renderItems(); const n = $("#iq"); n.focus(); n.setSelectionRange(pos, pos); };
   $$("#v-items [data-it]").forEach(b => b.onclick = () => { itemFilter.t = b.dataset.it; renderItems(); });
 }
@@ -1870,7 +1931,7 @@ function wireSearch(){
   try { if (localStorage.getItem("wm-spoil") === "1") document.body.classList.add("hide-spoilers"); } catch(e){}
   try {
     const [pj, mj] = await Promise.all([fetch("data/pages.json").then(r => r.json()), fetch("data/moons.json").then(r => r.json())]);
-    P = pj.pages; PLAIN = pj.plain; NAV = pj.nav; M = mj.moons; MAPS = mj.maps; window.ICONS = mj.icons || {}; window.INTICONS = mj.intIcons || {}; window.ITEMS = mj.items || {}; window.VENTS = mj.vents || []; window.VINTIMGS = mj.vintImgs || {}; window.LORE = mj.lore || [];
+    P = pj.pages; PLAIN = pj.plain; NAV = pj.nav; M = mj.moons; MAPS = mj.maps; window.ICONS = mj.icons || {}; window.INTICONS = mj.intIcons || {}; window.ITEMS = mj.items || {}; window.CRAFT = mj.craft || null; window.VENTS = mj.vents || []; window.VINTIMGS = mj.vintImgs || {}; window.LORE = mj.lore || [];
   } catch(e){
     $("#loading").textContent = "The guide's data didn't load. Reload the page to try again."; return;
   }
