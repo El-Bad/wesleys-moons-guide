@@ -962,7 +962,7 @@ const hzPill = h => `<span class="haz ${hzClass(h)}" title="Hazard level">${esc(
 
 /* ---------- state + sync ---------- */
 const LS = "wm-guide-v1";
-const SEED = {moons:{"Asteroid-13":{u:1,v:1},"Junic":{u:1,v:1},"Infernis":{u:1,v:1},"Motra":{u:1,v:1},"Fission-C":{u:1},"Oldred":{u:1},"Galetry":{u:1,v:1},"MorvDonalds":{u:1},"Repress":{u:1}},found:{"Asteroid-13>Junic":1,"Motra>Fission-C":1,"Motra>Oldred":1},goals:{},t:0};
+const SEED = {"moons":{"Asteroid-13":{"u":1,"v":1},"Junic":{"u":1,"v":1},"Infernis":{"u":1,"v":1},"Motra":{"u":1,"v":1},"Fission-C":{"u":1},"Oldred":{"u":1},"Galetry":{"u":1,"v":1},"MorvDonalds":{"u":1},"Repress":{"u":1},"Crowd":{"u":1},"Atlantica":{"u":1},"Narcotic":{"u":1},"Dreck":{"u":1},"Chasm":{"u":1},"Etern":{"u":1},"Gratar":{"u":1},"Roart":{"u":1},"Thalasso":{"u":1},"Lecaro":{"u":1},"Acidir":{"u":1},"Trite":{"u":1},"Duckstroid-14":{"u":1}},"found":{"Asteroid-13>Junic":1,"Motra>Fission-C":1,"Motra>Oldred":1},"goals":{},"t":0};
 let state = load();
 let db = null, crewDoc = null, writing = false, pending = false, lastRemote = 0;
 function load(){
@@ -1568,6 +1568,22 @@ function renderHome(){
   wireResize();
   renderTree();
 }
+function shareHtml(){
+  return `<div class="panel" style="margin-top:12px">  <h2 style="font-size:18px">Share, back up or reset progress</h2>
+  <div class="share">
+   <p style="margin:4px 0 8px;font-size:14px">Copy a code to back up your progress or move it to another device. New visitors start from the guide author's progress; press Reset tracker (twice) to start from zero.</p>
+   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button class="btn" id="copycode">Copy progress code</button><button class="btn" id="loadcode">Load code from box</button><button class="btn" id="resetcode">Reset tracker</button><label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="spoil" ${document.body.classList.contains("hide-spoilers") ? "checked" : ""}> Blur story spoilers</label></div>
+   <textarea id="code" aria-label="Progress code"></textarea>
+   <p id="codemsg" style="font-size:13px;color:var(--muted);margin:4px 0 0"></p>
+  </div>
+</div>`;
+}
+function wireShare(){
+  $("#copycode").onclick = async () => { const c = btoa(unescape(encodeURIComponent(JSON.stringify(state)))); $("#code").value = c; try { await navigator.clipboard.writeText(c); $("#codemsg").textContent = "Copied. Paste it into this box on another device and press Load."; } catch(e){ $("#codemsg").textContent = "Copy the code from the box above."; } };
+  $("#loadcode").onclick = () => { try { const s = JSON.parse(decodeURIComponent(escape(atob($("#code").value.trim())))); if (!s.moons) throw 0; state = s; commit(); $("#codemsg").textContent = "Progress loaded."; } catch(e){ $("#codemsg").textContent = "That code didn't work. Copy the whole code and try again."; } };
+  $("#resetcode").onclick = () => { if ($("#resetcode").dataset.armed){ state = {moons:{},found:{},goals:{},t:0}; commit(); $("#codemsg").textContent = "Tracker reset."; delete $("#resetcode").dataset.armed; $("#resetcode").textContent = "Reset tracker"; } else { $("#resetcode").dataset.armed = 1; $("#resetcode").textContent = "Click again to confirm reset"; } };
+  $("#spoil").onchange = e => { document.body.classList.toggle("hide-spoilers", e.target.checked); try { localStorage.setItem("wm-spoil", e.target.checked ? "1" : "0"); } catch(_){} };
+}
 function renderProgress(){
   const {wes, uN, vN, avail} = progressNumbers();
   const card = n => {
@@ -1596,7 +1612,8 @@ function renderProgress(){
     </div>
     <div class="panel goals"><h2>Goals checklist</h2>${goalsHtml}</div>
   </div>
-  <div class="panel next"><h2>Next up: moons you can unlock now</h2>${nextHtml}</div>`;
+  <div class="panel next"><h2>Next up: moons you can unlock now</h2>${nextHtml}</div>${shareHtml()}`;
+  wireShare();
   $$("#v-progress [data-u]").forEach(b => b.onclick = () => setU(b.dataset.u, true));
   $$("#v-progress [data-goal]").forEach(c => c.onchange = () => { state.goals = state.goals || {}; state.goals[c.dataset.goal] = c.checked ? 1 : 0; commit(); });
 }
@@ -1775,18 +1792,8 @@ function renderNotes(){
    <li>Ending 1: take off with no destiny item. Ending 4 (quickest real one): Harrington's research 4 from Utril. Ending 2: three special apparatus → Hyx → Empra. Endings 5 and 6: the Crowd → Release trial chain. Ending 3: Dreck → Core → Faith → Berunah + Cubatres crystal cube.</li>
    <li>Any ending except 1 unlocks the bonus moon End.</li>
   </ul>
-  <h2>Share or back up this tracker</h2>
-  <div class="share">
-   <p style="margin:4px 0 8px;font-size:14px">If crew sync is on, everyone with access sees the same ticks. You can also copy a code and paste it on another device.</p>
-   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button class="btn" id="copycode">Copy progress code</button><button class="btn" id="loadcode">Load code from box</button><button class="btn" id="resetcode">Reset tracker</button><label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="spoil" ${document.body.classList.contains("hide-spoilers") ? "checked" : ""}> Blur story spoilers</label></div>
-   <textarea id="code" aria-label="Progress code"></textarea>
-   <p id="codemsg" style="font-size:13px;color:var(--muted);margin:4px 0 0"></p>
-  </div>
+  <p style="margin-top:14px"><a class="btn" href="#progress" style="text-decoration:none">Share, back up or reset your progress →</a></p>
   </div>`;
-  $("#copycode").onclick = async () => { const c = btoa(unescape(encodeURIComponent(JSON.stringify(state)))); $("#code").value = c; try { await navigator.clipboard.writeText(c); $("#codemsg").textContent = "Copied. Paste it into this box on another device and press Load."; } catch(e){ $("#codemsg").textContent = "Copy the code from the box above."; } };
-  $("#loadcode").onclick = () => { try { const s = JSON.parse(decodeURIComponent(escape(atob($("#code").value.trim())))); if (!s.moons) throw 0; state = s; commit(); $("#codemsg").textContent = "Progress loaded."; } catch(e){ $("#codemsg").textContent = "That code didn't work. Copy the whole code and try again."; } };
-  $("#resetcode").onclick = () => { if ($("#resetcode").dataset.armed){ state = {moons:{},found:{},goals:{},t:0}; commit(); $("#codemsg").textContent = "Tracker reset."; delete $("#resetcode").dataset.armed; $("#resetcode").textContent = "Reset tracker"; } else { $("#resetcode").dataset.armed = 1; $("#resetcode").textContent = "Click again to confirm reset"; } };
-  $("#spoil").onchange = e => { document.body.classList.toggle("hide-spoilers", e.target.checked); try { localStorage.setItem("wm-spoil", e.target.checked ? "1" : "0"); } catch(_){} };
 }
 
 /* ---------- page / dossier ---------- */
