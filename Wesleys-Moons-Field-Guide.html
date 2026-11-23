@@ -471,6 +471,16 @@ svg .node.locked .tinfo{opacity:.75}
 .craftguide td,.craftguide th{border-top:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
 .craftguide th{font:600 11px var(--font-mono);text-transform:uppercase;color:var(--muted)}
 
+
+.minimap{display:block;border:1px solid var(--line);border-radius:6px;background:#07080c;overflow:hidden;line-height:0}
+.minimap svg{width:100%;height:auto;display:block}
+.minimap:hover,.minimap:focus-visible{border-color:var(--accent)}
+.minimap .mmhalo{animation:mmpulse 1.6s ease-in-out infinite}
+@keyframes mmpulse{0%,100%{opacity:.35}50%{opacity:.9}}
+.mmwrap{margin:8px 0 10px}
+.mmcap{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.mmcap small{color:var(--muted);font-size:11.5px}
+
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -1061,10 +1071,12 @@ function route(){
   $$(".view").forEach(v => v.classList.remove("on"));
   $$("nav.tabs a").forEach(a => a.removeAttribute("aria-current"));
   let tab = h;
-  document.body.classList.toggle("home", h === "home");
+  document.body.classList.toggle("home", h === "home" || h.startsWith("map-"));
   document.documentElement.style.setProperty("--top", ($(".top").offsetHeight || 62) + "px");
   requestAnimationFrame(() => document.documentElement.style.setProperty("--navh", ($(".top").offsetHeight || 52) + "px"));
   if (h === "home"){ $("#v-home").classList.add("on"); renderHome(); }
+  else if (h.startsWith("map-")){ const n = decodeURIComponent(h.slice(4)); tsel = M[n] ? n : null; tv = null; history.replaceState(null, "", "#home");
+    $("#v-home").classList.add("on"); renderHome(); tab = "home"; }
   else if (h === "progress"){ $("#v-progress").classList.add("on"); renderProgress(); }
   else if (h === "moons"){ $("#v-moons").classList.add("on"); renderMoons(); }
   else if (h === "interiors" || h === "entities" || h === "guides"){ $("#v-list").classList.add("on"); renderList(h); }
@@ -1512,6 +1524,9 @@ function renderTree(){
     g.addEventListener("click", () => { if (!svg.dataset.moved) pick(); });
     const open = () => { const m = M[g.dataset.n]; if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); if (m?.slug) location.hash = m.slug; };
     g.addEventListener("dblclick", open);
+    g.addEventListener("mousedown", e => { if (e.button === 1) e.preventDefault(); });
+    g.addEventListener("auxclick", e => { if (e.button !== 1) return; e.preventDefault(); const l = moonLink(g.dataset.n); if (!l || l === "#moons") return;
+      window.open(l.startsWith("#") ? location.href.split("#")[0] + l : l, "_blank", "noopener"); });
     g.addEventListener("contextmenu", e => { e.preventDefault(); open(); });
     g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
   });
@@ -1555,7 +1570,7 @@ function renderHome(){
   <div class="tree" id="tree">
     <div class="tree-stage">
       <div class="tree-tools"><button id="tzin" aria-label="Zoom in">+ Zoom</button><button id="tzout" aria-label="Zoom out">−</button><button id="tzreset">Fit</button><button id="tfull">⛶ Full screen</button><label><input type="checkbox" id="tall" ${tAll ? "checked" : ""}> Show all alternate routes</label><label title="Show each moon's route price and hazard level"><input type="checkbox" id="tinfo" ${tInfo ? "checked" : ""}> Price &amp; hazard</label><a class="tsum" href="#progress" title="Open the progress page">${uN}/${wes.length} unlocked · ${vN} visited · ${avail.length} reachable →</a></div>
-      <div class="tree-legend"><span><i style="border-color:#f0a23a"></i>Visited</span><span><i style="border-color:#5cc28a"></i>Unlocked</span><span><i style="border-color:#f0a23a;border-style:dashed"></i>Reachable now</span><span><i style="border-color:#3a3f4a"></i>Locked</span><span>Click: details · Right-click or double-click: open guide · Drag / scroll: pan &amp; zoom</span></div>
+      <div class="tree-legend"><span><i style="border-color:#f0a23a"></i>Visited</span><span><i style="border-color:#5cc28a"></i>Unlocked</span><span><i style="border-color:#f0a23a;border-style:dashed"></i>Reachable now</span><span><i style="border-color:#3a3f4a"></i>Locked</span><span>Click: details · Right/double-click: guide · Middle-click: new tab · Drag/scroll: pan &amp; zoom</span></div>
       <div class="tree-credit">Layout after the community progression map by WhiteA12 (inspired by Nagatonis)</div>
     </div>
     <div class="tree-resize" id="tresize" role="separator" aria-orientation="vertical" aria-label="Resize the moon panel (drag, or use arrow keys)" tabindex="0"></div>
@@ -1795,6 +1810,24 @@ function renderStatusBits(slug){
   $$("[data-found]").forEach(c => c.checked = !!state.found?.[c.dataset.found]);
   $$(".reach [data-srcchip]").forEach(el => el.outerHTML = moonChip(el.dataset.srcchip));
 }
+
+/* ---------- mini map on moon pages ---------- */
+function miniMap(n){
+  if (!TPOS[n]) return "";
+  const col = x => isV(x) ? "#f0a23a" : isU(x) ? "#5cc28a" : available(x) ? "#c9a24a" : "#3d4250";
+  const edges = TEDGES.map(([a, b]) => { const [x1, y1] = TPOS[a], [x2, y2] = TPOS[b]; const on = a === n || b === n;
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${on ? "#f0a23a" : "#2a2e38"}" stroke-width="${on ? 9 : 5}"/>`; }).join("");
+  const dots = Object.entries(TPOS).filter(([x]) => M[x] && x !== n).map(([x, [cx, cy]]) => `<circle cx="${cx}" cy="${cy}" r="22" fill="${col(x)}"/>`).join("");
+  const [x, y] = TPOS[n], lx = Math.max(140, Math.min(1860, x));
+  const label = n === "End" ? "Repress" : n;
+  return `<div class="mmwrap"><div class="mmcap"><span class="eyebrow">On the map</span><small>click to open</small></div>
+    <a class="minimap" href="#map-${encodeURIComponent(n)}" title="Show ${esc(label)} on the moon map" aria-label="Show ${esc(label)} on the moon map">
+    <svg viewBox="-60 -40 2120 1220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${edges}${dots}
+      <circle class="mmhalo" cx="${x}" cy="${y}" r="95" fill="#f0a23a"/><circle cx="${x}" cy="${y}" r="46" fill="#f3c27a" stroke="#07080c" stroke-width="10"/>
+      <text x="${lx}" y="${y < 160 ? y + 140 : y - 80}" text-anchor="middle" fill="#fff" stroke="#07080c" stroke-width="16" paint-order="stroke" style="font:700 92px var(--font-display, sans-serif)">${esc(label)}</text>
+    </svg></a></div>`;
+}
+
 function renderPage(slug){
   const pg = P[slug]; const t = pg.title; const m = M[t]; const info = pg.info;
   const isMoon = pg.kind === "moon";
@@ -1843,6 +1876,7 @@ function renderPage(slug){
           ${m?.num ? `<div class="num">Moon ${m.num}${m.vanilla ? " · vanilla" : ""}</div>` : ""}
           <h1>${esc(t)}</h1>
           ${isMoon ? `<div class="status-row" id="statusbox"></div>` : ""}
+          ${isMoon ? miniMap(t) : ""}
           ${imgTabs}
           ${ims.length ? `<img class="main-img" id="mainimg" src="${esc(ims[0].src)}" alt="${esc(t)}">` : ""}
           ${facts}
