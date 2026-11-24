@@ -58,6 +58,8 @@ for a, w, b in FLOPPY:  # sanity check against the dump
     assert re.search(r'[Ff]loppy disc machine.{0,120}' + re.escape(a) + r'.{0,80}' + re.escape(b), W[b], re.S) or b in W[a], (a, b)
 
 mj = json.load(open(S + '/build/data/moons.json', encoding='utf-8'))
+for L in ING.values():
+    for i in L: i['img'] = (mj.get('items', {}).get(i['n'].lower()) or {}).get('img', '')
 mj['craft'] = {'recipes': R, 'ing': ING, 'res': RES, 'floppy': FLOPPY}
 json.dump(mj, open(S + '/build/data/moons.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 print(len(R), 'recipes;', {k: len(v) for k, v in ING.items()})

@@ -459,6 +459,11 @@ svg .node.locked .tinfo{opacity:.75}
 .recipe{margin-top:6px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
 .recipe .rh{font:600 11px var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:3px}
 .recipe ul{margin:2px 0 0;padding-left:18px}
+.rtiles{display:flex;flex-wrap:wrap;gap:8px;margin:7px 0 4px}
+.rt{position:relative;width:72px;text-align:center}
+.rt img{width:56px;height:56px;object-fit:contain;display:block;margin:0 auto;padding:4px;border:1px solid var(--line);border-radius:8px;background:var(--panel,#1a1e27)}
+.rt .rq{position:absolute;top:36px;right:4px;font:700 13px var(--font-mono);padding:0 5px;border-radius:9px;background:var(--accent);color:#111}
+.rt small{display:block;font-size:11px;line-height:1.2;margin-top:3px;color:var(--muted)}
 .recipe li{margin:2px 0}
 .recipe .rs{color:var(--muted);font-size:12.5px;display:inline}
 .recipe .rf{color:var(--muted);font-size:12.5px;margin:1px 0 3px}
@@ -1176,12 +1181,20 @@ function matLine(q, res){
   const I = (window.CRAFT.ing[res] || []); const small = I.find(i => !i.two) || I[0]; const big = I.find(i => i !== small);
   if (!small) return `<li><b>${q} ${esc(res)}</b></li>`;
   const k = Math.ceil(q / small.gives);
-  return `<li><b>${q} ${esc(res)}</b> = ${k}× ${esc(small.n)} <span class="rs">(${small.gives} each, ${esc(small.w)} lb)</span>${big ? ` <span class="rs">or ${Math.ceil(q / big.gives)}× ${esc(big.n)} (${big.gives} each${big.two ? ", two-handed" : ""})</span>` : ""}
+  return `<li><b>${esc(res)}: ${q} needed</b> → bring <b>${k}× ${esc(small.n)}</b> <span class="rs">(each gives ${small.gives}, ${esc(small.w)} lb)</span>${big ? ` <span class="rs">or ${Math.ceil(q / big.gives)}× ${esc(big.n)} (each gives ${big.gives}${big.two ? ", two-handed" : ""})</span>` : ""}
     <div class="rf">Find it on: ${small.locs.slice(0, 5).map(locHtml).join(", ")}${big ? `; ${esc(big.n)}: ${big.locs.map(locHtml).join(", ")}` : ""}</div></li>`;
+}
+function recipeTiles(r){
+  return `<div class="rtiles">${r.cost.map(([q, res]) => {
+    const I = (window.CRAFT.ing[res] || []); const sm = I.find(i => !i.two) || I[0]; if (!sm) return "";
+    const k = Math.ceil(q / sm.gives);
+    return `<div class="rt" title="${esc(res)}: ${q} needed = ${k}× ${esc(sm.n)} (each gives ${sm.gives})">${sm.img ? `<img src="${sm.img}" alt="" loading="lazy">` : ""}<span class="rq">×${k}</span><small>${esc(sm.n)}</small></div>`;
+  }).join("")}</div>`;
 }
 function recipeHtml(r){
   return `<div class="recipe"><div class="rh">Recipe${r.yield > 1 ? ` · makes ${r.yield}` : ""}</div>
     <div><b>Craft at:</b> ${r.at.length === 1 ? `<b>${esc(r.at[0])} only</b> <span class="rs">(${esc(STATION[r.at[0]].split(": ")[1])})</span>` : `Gratar or Galetry fabricator <span class="rs">(see "How crafting works" above the list)</span>`}</div>
+    ${recipeTiles(r)}
     <ul>${r.cost.map(([q, res]) => matLine(q, res)).join("")}</ul></div>`;
 }
 function ingredientHtml(x){
